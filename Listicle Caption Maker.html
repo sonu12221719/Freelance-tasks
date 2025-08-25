@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Listicle Caption Maker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            'montserrat': ['Montserrat', 'sans-serif'],
+            'opensans': ['Open Sans', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    select option {
+      padding: 10px;
+      background-color: white;
+      color: #1f2937;
+    }
+
+    .dark select option {
+      background-color: #333333;
+      color: #e5e7eb;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid #6b7280;
+      pointer-events: none;
+      transition: all 0.2s ease;
+    }
+
+    .select-wrapper:focus-within::after {
+      border-top-color: #169976;
+    }
+
+    .dark .select-wrapper::after {
+      border-top-color: #9ca3af;
+    }
+
+    .dark .select-wrapper:focus-within::after {
+      border-top-color: #169976;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(22, 153, 118, 0.2);
+    }
+
+    .dark select:focus, .dark input:focus {
+      box-shadow: 0 0 0 2px rgba(22, 153, 118, 0.3);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      opacity: 0.5;
+    }
+
+    .input-wrapper:focus-within::after {
+      opacity: 1;
+      filter: invert(45%) sepia(85%) saturate(500%) hue-rotate(118deg) brightness(90%) contrast(90%);
+    }
+
+    .dark .input-wrapper::after {
+      filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(103%) contrast(103%);
+    }
+
+    .dark .input-wrapper:focus-within::after {
+      filter: invert(45%) sepia(85%) saturate(500%) hue-rotate(118deg) brightness(90%) contrast(90%);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-[#111111] flex flex-col items-center p-4 sm:p-6 min-h-screen font-opensans">
+    <nav class="w-full sm:w-2/3 rounded-full bg-[#169976] shadow-md shadow-gray-900/50 dark:shadow-green-500/30 dark:bg-[#222222]/30 p-3 px-4 sm:px-5">
+        <div class="flex justify-between items-center">
+            <h1 class="text-xl sm:text-2xl font-bold text-center text-white dark:text-[#169976] font-montserrat">Listicle Caption Maker</h1>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="themeToggle" class="sr-only peer">
+                <div class="w-12 sm:w-14 h-6 sm:h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 sm:after:h-6 after:w-5 sm:after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-[#169976]"></div>
+            </label>
+        </div>
+    </nav>
+
+<div class="bg-white/30 dark:bg-[#222222]/30 backdrop-blur-md shadow-lg shadow-gray-900/50 dark:shadow-green-500/50 p-4 sm:p-8 rounded-2xl mt-16 sm:mt-6 w-full max-w-2xl">
+    <form id="captionForm" class="space-y-4 sm:space-y-6">
+      <div class="relative">
+        <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center font-montserrat">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-[#169976]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+          </svg>
+          Select a Theme
+        </label>
+        <div class="select-wrapper">
+          <select id="theme" class="block w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-[#333333] text-gray-900 dark:text-gray-100 focus:border-[#169976] focus:ring-2 focus:ring-[#169976]/20 dark:focus:ring-[#169976]/20 transition-all duration-200 cursor-pointer font-opensans">
+            <option value="" class="py-2">Choose a theme</option>
+            <option value="Pets" class="py-2">Pets</option>
+            <option value="Travel" class="py-2">Travel</option>
+            <option value="Food" class="py-2">Food</option>
+            <option value="Fitness" class="py-2">Fitness</option>
+            <option value="Tech" class="py-2">Tech</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="relative">
+        <label for="keyword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center font-montserrat">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-[#169976]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Or Enter a Keyword
+        </label>
+        <div class="input-wrapper">
+          <input type="text" id="keyword" class="block w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-[#333333] text-gray-900 dark:text-gray-100 focus:border-[#169976] focus:ring-2 focus:ring-[#169976]/20 dark:focus:ring-[#169976]/20 transition-all duration-200 font-opensans" placeholder="e.g., Coffee" />
+        </div>
+      </div>
+
+      <div class="relative">
+        <label for="listType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center font-montserrat">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-[#169976]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          List Type (Optional)
+        </label>
+        <div class="select-wrapper">
+          <select id="listType" class="block w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-[#333333] text-gray-900 dark:text-gray-100 focus:border-[#169976] focus:ring-2 focus:ring-[#169976]/20 dark:focus:ring-[#169976]/20 transition-all duration-200 cursor-pointer font-opensans">
+            <option value="" class="py-2">Surprise Me</option>
+            <option value="Reasons" class="py-2">Reasons</option>
+            <option value="Facts" class="py-2">Facts</option>
+            <option value="Tips" class="py-2">Tips</option>
+            <option value="Ways" class="py-2">Ways</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="w-full bg-[#169976] hover:bg-[#138066] text-white py-2 sm:py-3 px-4 rounded-xl font-medium transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-[#169976]/20 dark:focus:ring-[#169976]/20 flex items-center justify-center text-sm sm:text-base font-montserrat">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Generate Caption
+      </button>
+    </form>
+
+    <div id="output" class="mt-6 sm:mt-8 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-[#333333] text-center text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200 min-h-[3rem] flex items-center justify-center font-montserrat"></div>
+    <button id="copyBtn" class="mt-4 w-full bg-[#169976] hover:bg-[#138066] text-white py-2 sm:py-3 px-4 rounded-xl font-medium transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-[#169976]/20 dark:focus:ring-[#169976]/20 flex items-center justify-center hidden text-sm sm:text-base font-montserrat">
+      <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+      </svg>
+      Copy Caption
+    </button>
+  </div>
+
+  <script>
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('themeToggle');
+    
+    // Check for saved theme preference or use system preference
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+      themeToggle.checked = true;
+    } else {
+      document.documentElement.classList.remove('dark');
+      themeToggle.checked = false;
+    }
+
+    // Toggle theme
+    themeToggle.addEventListener('change', () => {
+      if (themeToggle.checked) {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+      }
+    });
+
+    const captionForm = document.getElementById('captionForm');
+    const outputDiv = document.getElementById('output');
+    const copyBtn = document.getElementById('copyBtn');
+
+    const templates = {
+      Pets: [
+        "Reasons Your Pet Deserves All the Love",
+        "Ways to Spoil Your Furry Friend",
+        "Must-Have Treats for Your Pet",
+        "Secrets to Making Your Pet Happy"
+      ],
+      Travel: [
+        "Destinations You Need to Visit",
+        "Reasons to Book Your Next Trip",
+        "Travel Hacks You'll Wish You Knew",
+        "Adventures to Add to Your Bucket List"
+      ],
+      Food: [
+        "Dishes You Need to Try",
+        "Reasons to Love This Cuisine",
+        "Ingredients for the Perfect Meal",
+        "Secrets to Cooking Like a Pro"
+      ],
+      Fitness: [
+        "Workouts to Transform Your Routine",
+        "Reasons to Start Your Fitness Journey",
+        "Tips for Staying Motivated",
+        "Exercises for a Stronger You"
+      ],
+      Tech: [
+        "Gadgets You Can't Live Without",
+        "Innovations Changing the Game",
+        "Reasons to Upgrade Your Tech",
+        "Features You'll Love"
+      ],
+      default: [
+        "Reasons to Love [KEYWORD]",
+        "Ways to Enjoy [KEYWORD]",
+        "Must-Have [KEYWORD] Essentials",
+        "Secrets to Mastering [KEYWORD]"
+      ]
+    };
+
+    const prefixes = ['Top', 'Best', 'Ultimate'];
+    const emojis = ['🔥', '✨', '💡', '💯', '📌', '🐾', '🍽️', '🏋️', '📱', '🌍'];
+
+    captionForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const theme = document.getElementById('theme').value;
+      const keyword = document.getElementById('keyword').value.trim();
+      const listType = document.getElementById('listType').value;
+
+      if (!theme && !keyword) {
+        outputDiv.textContent = 'Please select a theme or enter a keyword!';
+        copyBtn.classList.add('hidden');
+        return;
+      }
+
+      const input = keyword || theme;
+      const templateKey = theme || 'default';
+      const templateList = templates[templateKey];
+      const template = templateList[Math.floor(Math.random() * templateList.length)];
+      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+      const listNumber = Math.floor(Math.random() * 8) + 3;
+      const formattedInput = input.charAt(0).toUpperCase() + input.slice(1);
+
+      let caption = templateKey === 'default' ? template.replace('[KEYWORD]', formattedInput) : template;
+
+      if (listType) {
+        caption = `${listType} About ${formattedInput}`;
+      }
+
+      const finalCaption = `${emoji} ${prefix} ${listNumber} ${caption}`;
+      outputDiv.textContent = finalCaption;
+      copyBtn.classList.remove('hidden');
+
+      setTimeout(() => {
+        outputDiv.textContent = '';
+        copyBtn.classList.add('hidden');
+      }, 60000);
+    });
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(outputDiv.textContent);
+      copyBtn.textContent = "Copied!";
+      setTimeout(() => (copyBtn.textContent = "Copy Caption"), 2000);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Headline Guessing Game</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              bg: '#1a1a1a',
+              card: '#2d2d2d',
+              text: '#e5e5e5'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 min-h-screen transition-colors duration-200">
+  <div id="root"></div>
+  <script type="text/babel">
+    const headlines = [
+      { text: "Global Summit Addresses Climate Change Solutions", isReal: true },
+      { text: "Discover the Secret to Flawless Skin Today!", isReal: false },
+      { text: "New Study Reveals Benefits of Daily Exercise", isReal: true },
+      { text: "You Won't Believe What This Celebrity Did!", isReal: false },
+      { text: "Local Community Raises Funds for School Renovation", isReal: true }
+    ];
+
+    const ThemeToggle = ({ isDark, onToggle }) => {
+      return (
+        <button
+          onClick={onToggle}
+          className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                   bg-gray-200 dark:bg-gray-700"
+          role="switch"
+          aria-checked={isDark}
+        >
+          <span className="sr-only">Toggle theme</span>
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300
+                      ${isDark ? 'translate-x-6' : 'translate-x-1'}`}
+          >
+            {isDark ? (
+              <svg className="h-4 w-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="h-4 w-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </span>
+        </button>
+      );
+    };
+
+    const Navbar = ({ isDark, onToggleTheme, onReset }) => {
+      return (
+        <nav className="bg-white dark:bg-gray-800 shadow-lg transition-colors duration-200 w-full sm:w-4/5 md:w-2/3 mx-auto rounded-full mt-4">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-14 sm:h-16 items-center">
+              <div className="flex-shrink-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 
+                             bg-clip-text text-transparent px-2">
+                  Real News or Sponsored Post?
+                </h1>
+              </div>
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <ThemeToggle isDark={isDark} onToggle={onToggleTheme} />
+              </div>
+            </div>
+          </div>
+        </nav>
+      );
+    };
+
+    const HeadlineDisplay = ({ headline, onGuess, onSkip, onReset, onContinue, disabled, currentQuestion, totalQuestions, score, showContinue }) => {
+      return (
+        <div className="animate-fade-in">
+          {/* Timeline with Score */}
+          <div className="relative mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-2 sm:space-y-0">
+              <div className="flex items-center space-x-2">
+                <div className="bg-blue-100 dark:bg-blue-900 p-1.5 rounded-lg">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Current Score</p>
+                  <p className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">{score}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="bg-purple-100 dark:bg-purple-900 p-1.5 rounded-lg">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Question</p>
+                  <p className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400">
+                    {currentQuestion} / {totalQuestions}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 sm:h-2.5">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 sm:h-2.5 rounded-full transition-all duration-300 relative"
+                style={{ width: `${(score / totalQuestions) * 100}%` }}
+              >
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 
+                              bg-white dark:bg-gray-800 rounded-full p-0.5 shadow-lg">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400">0</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{totalQuestions}</span>
+            </div>
+          </div>
+
+          {/* Question Card */}
+          <div className="bg-white dark:bg-gray-700 rounded-xl p-3 sm:p-4 shadow-lg mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 leading-tight">
+              {headline}
+            </h2>
+          </div>
+
+          {/* Options */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <button
+              onClick={() => onGuess(true)}
+              disabled={disabled}
+              className="group relative p-3 sm:p-4 bg-white dark:bg-gray-700 rounded-lg shadow-lg 
+                       hover:shadow-xl transition-all duration-200 disabled:opacity-50 
+                       disabled:cursor-not-allowed overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 
+                            group-hover:opacity-10 transition-opacity duration-200"></div>
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900 rounded-lg 
+                              flex items-center justify-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-200">Real News</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Factual news article</p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => onGuess(false)}
+              disabled={disabled}
+              className="group relative p-3 sm:p-4 bg-white dark:bg-gray-700 rounded-lg shadow-lg 
+                       hover:shadow-xl transition-all duration-200 disabled:opacity-50 
+                       disabled:cursor-not-allowed overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 opacity-0 
+                            group-hover:opacity-10 transition-opacity duration-200"></div>
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900 rounded-lg 
+                              flex items-center justify-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-200">Sponsored Post</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Advertisement or promotion</p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Continue Button */}
+          {showContinue && (
+            <div className="flex justify-center mb-4">
+              <button
+                onClick={onContinue}
+                className="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 
+                         text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 
+                         transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 
+                         dark:focus:ring-blue-500 text-sm sm:text-base"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                Continue to Next Question
+              </button>
+            </div>
+          )}
+
+          {/* Skip/Reset Buttons */}
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-4 mt-4">
+            <button
+              onClick={onSkip}
+              disabled={disabled}
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 
+                       bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 
+                       text-gray-600 dark:text-gray-300 rounded-lg shadow-sm hover:shadow-md 
+                       transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed 
+                       border border-gray-200 dark:border-gray-600 hover:from-gray-100 hover:to-gray-200 
+                       dark:hover:from-gray-600 dark:hover:to-gray-700 focus:outline-none focus:ring-2 
+                       focus:ring-gray-400 dark:focus:ring-gray-500 text-sm sm:text-base"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Skip
+            </button>
+
+            <button
+              onClick={onReset}
+              disabled={disabled}
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 
+                       bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/50 dark:to-red-800/50 
+                       text-red-600 dark:text-red-400 rounded-lg shadow-sm hover:shadow-md 
+                       transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed 
+                       border border-red-200 dark:border-red-800 hover:from-red-100 hover:to-red-200 
+                       dark:hover:from-red-800/70 dark:hover:to-red-700/70 focus:outline-none focus:ring-2 
+                       focus:ring-red-400 dark:focus:ring-red-500 text-sm sm:text-base"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reset
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    const Modal = ({ isOpen, onClose, children }) => {
+      if (!isOpen) return null;
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 max-w-md w-full mx-4 shadow-2xl transform transition-all">
+            <div className="relative">
+              <button
+                onClick={onClose}
+                className="absolute -top-2 -right-2 p-1.5 sm:p-2 rounded-full bg-gray-200 dark:bg-gray-700 
+                         hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+              >
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              {children}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const ResultDisplay = ({ selectedAnswer, isCorrect, onNext, onClose, isLast }) => {
+      const [showModal, setShowModal] = React.useState(true);
+
+      const handleClose = () => {
+        setShowModal(false);
+        onClose();
+      };
+
+      const handleNext = () => {
+        setShowModal(false);
+        onNext();
+      };
+
+      return (
+        <Modal isOpen={showModal} onClose={handleClose}>
+          <div className="text-center">
+            <div className={`text-3xl sm:text-4xl mb-3 sm:mb-4 ${isCorrect ? 'text-green-500' : 'text-red-500'}`}>
+              {isCorrect ? '✓' : '✗'}
+            </div>
+            <h3 className={`text-xl sm:text-2xl font-bold mb-3 sm:mb-4 ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+              {isCorrect ? 'Correct!' : 'Incorrect!'}
+            </h3>
+            <p className="text-base sm:text-lg mb-4 sm:mb-6 text-gray-700 dark:text-gray-300">
+              This is a {selectedAnswer ? 'Real News Article' : 'Sponsored Post'}.
+            </p>
+            <button
+              onClick={handleNext}
+              className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 
+                       text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transform 
+                       hover:scale-105 transition-all duration-200 shadow-lg font-semibold 
+                       text-sm sm:text-base"
+            >
+              {isLast ? 'See Final Score' : 'Next Headline'}
+            </button>
+          </div>
+        </Modal>
+      );
+    };
+
+    const GameOver = ({ score, total, onRestart }) => {
+      const [showModal, setShowModal] = React.useState(true);
+
+      const handleClose = () => {
+        setShowModal(false);
+      };
+
+      const handleRestart = () => {
+        setShowModal(false);
+        onRestart();
+      };
+
+      return (
+        <Modal isOpen={showModal} onClose={handleClose}>
+          <div className="text-center">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 bg-gradient-to-r 
+                         from-green-500 to-blue-500 bg-clip-text text-transparent">
+              Game Over!
+            </h2>
+            <p className="text-lg sm:text-xl mb-6 sm:mb-8 text-gray-700 dark:text-gray-300">
+              Your final score: <span className="font-bold text-xl sm:text-2xl">{score}</span> out of {total}
+            </p>
+            <button
+              onClick={handleRestart}
+              className="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-green-600 
+                       text-white rounded-lg hover:from-green-600 hover:to-green-700 transform 
+                       hover:scale-105 transition-all duration-200 shadow-lg font-semibold 
+                       text-sm sm:text-base"
+            >
+              Play Again
+            </button>
+          </div>
+        </Modal>
+      );
+    };
+
+    const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+      if (!isOpen) return null;
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 max-w-md w-full mx-4 shadow-2xl transform transition-all">
+            <div className="text-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 dark:bg-red-900/50 rounded-full 
+                           flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                {title}
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
+                {message}
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <button
+                  onClick={onClose}
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 
+                           dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 
+                           transition-colors duration-200 focus:outline-none focus:ring-2 
+                           focus:ring-gray-400 dark:focus:ring-gray-500 text-sm sm:text-base"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={onConfirm}
+                  className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 
+                           transition-colors duration-200 focus:outline-none focus:ring-2 
+                           focus:ring-red-400 dark:focus:ring-red-500 text-sm sm:text-base"
+                >
+                  Reset Game
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const HeadlineGame = () => {
+      const [currentIndex, setCurrentIndex] = React.useState(0);
+      const [score, setScore] = React.useState(0);
+      const [selectedAnswer, setSelectedAnswer] = React.useState(null);
+      const [isGameOver, setIsGameOver] = React.useState(false);
+      const [showResult, setShowResult] = React.useState(false);
+      const [showContinue, setShowContinue] = React.useState(false);
+      const [showResetConfirm, setShowResetConfirm] = React.useState(false);
+      const [isDark, setIsDark] = React.useState(() => {
+        const savedTheme = localStorage.getItem('theme');
+        return savedTheme === 'dark';
+      });
+
+      React.useEffect(() => {
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [isDark]);
+
+      const currentHeadline = headlines[currentIndex];
+
+      const handleGuess = (guess) => {
+        setSelectedAnswer(guess);
+        setShowResult(true);
+        if (guess === currentHeadline.isReal) {
+          setScore(score + 1);
+        }
+      };
+
+      const handleNext = () => {
+        if (currentIndex + 1 < headlines.length) {
+          setCurrentIndex(currentIndex + 1);
+          setSelectedAnswer(null);
+          setShowResult(false);
+          setShowContinue(false);
+        } else {
+          setIsGameOver(true);
+        }
+      };
+
+      const handleContinue = () => {
+        handleNext();
+      };
+
+      const handleRestart = () => {
+        setCurrentIndex(0);
+        setScore(0);
+        setSelectedAnswer(null);
+        setIsGameOver(false);
+        setShowResult(false);
+        setShowContinue(false);
+      };
+
+      const handleSkip = () => {
+        if (currentIndex + 1 < headlines.length) {
+          setCurrentIndex(currentIndex + 1);
+          setSelectedAnswer(null);
+          setShowResult(false);
+          setShowContinue(false);
+        } else {
+          setIsGameOver(true);
+        }
+      };
+
+      const handleReset = () => {
+        setShowResetConfirm(true);
+      };
+
+      const handleResetConfirm = () => {
+        handleRestart();
+        setShowResetConfirm(false);
+      };
+
+      const handleResetCancel = () => {
+        setShowResetConfirm(false);
+      };
+
+      const handleCloseResult = () => {
+        setShowResult(false);
+        setShowContinue(true);
+      };
+
+      const toggleTheme = () => {
+        setIsDark(!isDark);
+      };
+
+      return (
+        <div className="min-h-screen bg-blue-100 dark:bg-[#111111]/30 flex flex-col p-4">
+          <Navbar isDark={isDark} onToggleTheme={toggleTheme} onReset={handleReset} />
+          <main className="flex-grow flex items-center justify-center p-4">
+            <div className="max-w-2xl w-full mx-auto p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl 
+                          transition-colors duration-200">
+              <HeadlineDisplay
+                headline={currentHeadline.text}
+                onGuess={handleGuess}
+                onSkip={handleSkip}
+                onReset={handleReset}
+                onContinue={handleContinue}
+                disabled={showResult}
+                currentQuestion={currentIndex + 1}
+                totalQuestions={headlines.length}
+                score={score}
+                showContinue={showContinue}
+              />
+              {selectedAnswer !== null && showResult && (
+                <ResultDisplay
+                  selectedAnswer={selectedAnswer}
+                  isCorrect={selectedAnswer === currentHeadline.isReal}
+                  onNext={handleNext}
+                  onClose={handleCloseResult}
+                  isLast={currentIndex + 1 === headlines.length}
+                />
+              )}
+              {isGameOver && (
+                <GameOver score={score} total={headlines.length} onRestart={handleRestart} />
+              )}
+              <ConfirmationModal
+                isOpen={showResetConfirm}
+                onClose={handleResetCancel}
+                onConfirm={handleResetConfirm}
+                title="Reset Game"
+                message="Are you sure you want to reset the game? Your progress will be lost."
+              />
+            </div>
+          </main>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<HeadlineGame />);
+  </script>
+</body>
+</html>

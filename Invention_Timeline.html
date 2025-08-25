@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drag and Drop Timeline</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          backgroundImage: {
+            'gradient-light': 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+            'gradient-dark': 'linear-gradient(135deg, #111111 0%, #222222 100%)',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gradient-light dark:bg-gradient-dark flex flex-col min-h-screen transition-colors duration-200">
+    <header class="bg-white/80 dark:bg-[#222222]/80 backdrop-blur-sm sm:p-6 p-2 py-4 sticky top-0 z-50 rounded-lg shadow dark:shadow-gray-700 w-full px-16 mx-auto mb-8">
+        <div class="flex justify-between items-center">
+            <h1 class="text-md sm:text-3xl font-bold text-center text-gray-800 dark:text-white">
+                <i class="fas fa-history text-blue-500"></i> Invention Timeline
+            </h1>
+            <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200">
+                <i class="fas fa-sun text-yellow-500 dark:hidden"></i>
+                <i class="fas fa-moon text-blue-300 hidden dark:block"></i>
+            </button>
+        </div>
+    </header>
+    <h1 class="text-center text-md sm:text-5xl mb-4 sm:mt-10 font-bold text-gray-800 dark:text-white">Drag and drop the invention to the right century.</h1>
+    <main class="flex-grow container mx-auto p-4">
+      <div class="flex flex-col md:flex-row gap-8">
+        <!-- Card Container -->
+        <div class="w-full md:w-1/2 bg-white/80 dark:bg-[#222222]/80 backdrop-blur-sm p-4 rounded-lg shadow">
+          <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+            <i class="fas fa-lightbulb text-yellow-500"></i> Inventions
+          </h2>
+          <div id="card-container" class="space-y-4">
+            <div id="vaccines" class="cursor-grab bg-gray-50 dark:bg-[#111111] p-4 border border-gray-300 dark:border-gray-600 rounded-lg text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-gray-800 dark:text-white" draggable="true">
+              <i class="fas fa-syringe text-blue-500 mr-2"></i> Vaccines
+            </div>
+            <div id="typewriter" class="cursor-grab bg-gray-50 dark:bg-[#111111] p-4 border border-gray-300 dark:border-gray-600 rounded-lg text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-gray-800 dark:text-white" draggable="true">
+              <i class="fas fa-keyboard text-gray-600 dark:text-gray-300 mr-2"></i> Typewriter
+            </div>
+            <div id="transistor" class="cursor-grab bg-gray-50 dark:bg-[#111111] p-4 border border-gray-300 dark:border-gray-600 rounded-lg text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-gray-800 dark:text-white" draggable="true">
+              <i class="fas fa-microchip text-purple-500 mr-2"></i> Transistor
+            </div>
+          </div>
+        </div>
+        <!-- Drop Zone Container -->
+        <div class="w-full md:w-1/2 bg-white/80 dark:bg-[#222222]/80 backdrop-blur-sm p-4 rounded-lg shadow">
+          <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+            <i class="fas fa-clock text-green-500"></i> Centuries
+          </h2>
+          <div class="space-y-4">
+            <div class="min-h-[100px] bg-gray-50 dark:bg-[#111111] p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 text-gray-800 dark:text-white" data-century="18th">
+              <i class="fas fa-calendar-alt text-red-500 mr-2"></i> 18th century
+            </div>
+            <div class="min-h-[100px] bg-gray-50 dark:bg-[#111111] p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 text-gray-800 dark:text-white" data-century="19th">
+              <i class="fas fa-calendar-alt text-blue-500 mr-2"></i> 19th century
+            </div>
+            <div class="min-h-[100px] bg-gray-50 dark:bg-[#111111] p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 text-gray-800 dark:text-white" data-century="20th">
+              <i class="fas fa-calendar-alt text-green-500 mr-2"></i> 20th century
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Buttons -->
+      <div class="flex justify-center gap-4 mt-6">
+        <button id="check-btn" class="hidden bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-2.5 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          <i class="fas fa-check-circle mr-2"></i> Check Answers
+        </button>
+        <button id="reset-btn" class="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2.5 rounded-lg hover:from-rose-600 hover:to-pink-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          <i class="fas fa-redo mr-2"></i> Reset
+        </button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 mt-auto">
+      <div class="container mx-auto px-4">
+        <p class="text-center text-gray-600 dark:text-gray-400">
+          © 2024 Invention Timeline. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Results Modal -->
+    <div id="results-modal" class="fixed inset-0 bg-[#111111]/50 backdrop-blur-sm hidden z-50">
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-[#222222]/95 backdrop-blur-sm rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl border border-gray-100 dark:border-gray-700">
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold text-center text-gray-800 dark:text-white">Results</h3>
+        </div>
+        <div id="results-content" class="space-y-4">
+          <!-- Results will be inserted here -->
+        </div>
+        <div class="mt-8 flex justify-center">
+          <button id="close-modal-btn" class="bg-gradient-to-r from-violet-500 to-purple-500 text-white px-8 py-3 rounded-lg hover:from-violet-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+  <script>
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('theme-toggle');
+    const resultsModal = document.getElementById('results-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const resultsContent = document.getElementById('results-content');
+    const cardContainer = document.getElementById('card-container');
+    
+    // Function to shuffle array
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // Function to shuffle cards
+    function shuffleCards() {
+      const cards = Array.from(cardContainer.children);
+      const shuffledCards = shuffleArray(cards);
+      cardContainer.innerHTML = '';
+      shuffledCards.forEach(card => cardContainer.appendChild(card));
+    }
+
+    // Shuffle cards on page load
+    shuffleCards();
+    
+    // Modal close handler
+    closeModalBtn.addEventListener('click', () => {
+      resultsModal.classList.add('hidden');
+    });
+    
+    // Close modal when clicking outside
+    resultsModal.addEventListener('click', (e) => {
+      if (e.target === resultsModal) {
+        resultsModal.classList.add('hidden');
+      }
+    });
+
+    // Check for saved theme preference or use system preference
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    // Theme toggle click handler
+    themeToggle.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+      }
+    });
+
+    const cards = document.querySelectorAll('[draggable="true"]');
+    const dropZones = document.querySelectorAll('[data-century]');
+    const checkBtn = document.getElementById('check-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    let placedCards = 0;
+
+    // Initialize check button as hidden
+    checkBtn.classList.add('hidden');
+
+    // Card drag events
+    cards.forEach(card => {
+      card.addEventListener('dragstart', () => {
+        card.classList.add('opacity-50');
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('opacity-50');
+      });
+    });
+
+    // Drop zone events
+    dropZones.forEach(zone => {
+      zone.addEventListener('dragover', e => {
+        e.preventDefault();
+      });
+      zone.addEventListener('dragenter', () => {
+        zone.classList.add('bg-gray-200', 'dark:bg-gray-600');
+      });
+      zone.addEventListener('dragleave', () => {
+        zone.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+      });
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const card = document.querySelector('.opacity-50');
+        if (card && !zone.querySelector('[draggable="true"]')) {
+          zone.appendChild(card);
+          zone.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+          card.classList.add('mx-auto');
+          placedCards++;
+          console.log('Cards placed:', placedCards);
+          if (placedCards === cards.length) {
+            console.log('Showing check button');
+            checkBtn.classList.remove('hidden');
+          }
+        }
+      });
+    });
+
+    // Check answers
+    checkBtn.addEventListener('click', () => {
+      let correctCount = 0;
+      let resultsHTML = '';
+      
+      dropZones.forEach(zone => {
+        const card = zone.querySelector('[draggable="true"]');
+        if (card) {
+          const century = zone.dataset.century;
+          const isCorrect = (
+            (card.id === 'vaccines' && century === '18th') ||
+            (card.id === 'typewriter' && century === '19th') ||
+            (card.id === 'transistor' && century === '20th')
+          );
+          
+          if (isCorrect) correctCount++;
+          
+          resultsHTML += `
+            <div class="flex items-center justify-between p-4 rounded-lg ${isCorrect ? 'bg-green-50 dark:bg-green-900/30' : 'bg-red-50 dark:bg-red-900/30'} border ${isCorrect ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800'}">
+              <div class="flex items-center">
+                <i class="fas ${isCorrect ? 'fa-check-circle text-green-500' : 'fa-times-circle text-red-500'} mr-3 text-xl"></i>
+                <span class="text-gray-800 dark:text-white font-medium">${card.textContent.trim()} in ${century} century</span>
+              </div>
+              <span class="text-sm font-medium ${isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+                ${isCorrect ? 'Correct' : 'Incorrect'}
+              </span>
+            </div>
+          `;
+          
+          zone.classList.add(isCorrect ? 'border-green-500' : 'border-red-500');
+        }
+      });
+
+      // Add summary
+      resultsHTML = `
+        <div class="text-center mb-6">
+          <p class="text-xl font-bold text-gray-800 dark:text-white mb-2">You got ${correctCount} out of ${cards.length} correct!</p>
+          <div class="text-lg ${correctCount === cards.length ? 'text-green-500 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">
+            ${correctCount === cards.length ? 'Perfect score! 🎉' : 'Keep trying! 💪'}
+          </div>
+        </div>
+        ${resultsHTML}
+      `;
+
+      resultsContent.innerHTML = resultsHTML;
+      resultsModal.classList.remove('hidden');
+    });
+
+    // Reset
+    resetBtn.addEventListener('click', () => {
+      dropZones.forEach(zone => {
+        const card = zone.querySelector('[draggable="true"]');
+        if (card) {
+          cardContainer.appendChild(card);
+          card.classList.remove('mx-auto');
+        }
+        zone.classList.remove('border-green-500', 'border-red-500', 'bg-gray-200', 'dark:bg-gray-600');
+      });
+      placedCards = 0;
+      console.log('Reset - Cards placed:', placedCards);
+      checkBtn.classList.add('hidden');
+      // Shuffle cards after reset
+      shuffleCards();
+    });
+  </script>
+</body>
+</html>

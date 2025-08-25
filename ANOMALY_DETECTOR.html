@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cybersecurity Anomaly Detector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['JetBrains Mono', 'monospace'],
+            orbitron: ['Orbitron', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-10 font-mono bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900">
+  <h1 class="text-4xl sm:text-7xl font-orbitron font-semibold text-indigo-400 text-center mt-8 sm:mt-16 mb-6 sm:mb-10 tracking-widest drop-shadow-[rgba(99,102,241,0.5)]">
+    <i class="fas fa-shield-alt text-indigo-500 mr-3"></i>ANOMALY DETECTOR
+  </h1>
+  
+  <div class="w-full sm:w-3/5 bg-gray-900/80 backdrop-blur-sm rounded-lg shadow-2xl p-4 sm:p-8 mt-8 sm:mt-16 border border-indigo-500/30 shadow-[0_0_5px_rgba(99,102,241,0.2)]">
+    <p class="text-indigo-200 text-center text-sm sm:text-xl mb-6 sm:mb-8 font-light">
+      <i class="fas fa-terminal mr-2"></i>Enter a system action to analyze for suspicious activity.
+    </p>
+    
+    <div class="relative mb-4 sm:mb-6">
+      <div class="relative flex items-center">
+        <i class="fas fa-search absolute left-4 text-indigo-400/70 pointer-events-none"></i>
+        <input 
+          id="systemAction" 
+          type="text" 
+          placeholder="e.g., user login from IP 192.168.1.1 at 2 AM" 
+          class="w-full p-3 sm:p-4 sm:pl-12 pl-10 rounded-md bg-indigo-950/50 text-indigo-100 placeholder-indigo-300/50 border border-indigo-500/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:shadow-[0_0_15px_rgba(99,102,241,0.4)] font-mono text-sm sm:text-base"
+        >
+      </div>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mb-6 sm:mb-8">
+      <button 
+        id="analyzeBtn" 
+        class="w-full sm:flex-1 bg-gradient-to-r from-indigo-600 tracking-widest to-indigo-500 text-white py-2.5 sm:py-3 rounded-md hover:from-indigo-700 hover:to-indigo-600 hover:scale-105 transition-all duration-200 shadow-md font-orbitron drop-shadow-[rgba(255,255,255,0.5)] text-sm sm:text-base"
+      >
+        <i class="fas fa-magnifying-glass-chart mr-2"></i>ANALYZE
+      </button>
+      <button 
+        id="resetBtn" 
+        class="w-full sm:flex-1 bg-gray-800 text-indigo-300 tracking-widest py-2.5 sm:py-3 rounded-md hover:bg-gray-700 hover:scale-105 transition-all duration-200 border border-indigo-500/30 font-orbitron text-sm sm:text-base"
+      >
+        <i class="fas fa-rotate-left mr-2"></i>RESET
+      </button>
+    </div>
+    
+    <div id="result" class="text-center">
+      <p class="text-indigo-300/70 text-sm sm:text-base">
+        <i class="fas fa-info-circle mr-2"></i>Enter an action and click Analyze to see results.
+      </p>
+    </div>
+  </div>
+
+  <footer class="mt-auto py-4 text-center text-indigo-300/50 text-sm">
+    <i class="fas fa-copyright mr-1"></i>2025 Anomaly Detector. All rights reserved.
+  </footer>
+
+  <script>
+    const systemActionInput = document.getElementById('systemAction');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const resultDiv = document.getElementById('result');
+
+    // Mock safe IPs for demonstration
+    const safeIPs = ['192.168.1.1', '10.0.0.1'];
+
+    function detectAnomaly(action) {
+      action = action.toLowerCase();
+      let explanation = '';
+
+      // Rule 1: Check for failed attempts
+      if (action.includes('failed')) {
+        explanation = 'Suspicious: Failed attempts often indicate unauthorized access.';
+        return { isAnomaly: true, explanation };
+      }
+
+      // Rule 2: Check for unusual login times (12 AM - 5 AM)
+      const timeMatch = action.match(/at (\d+)(:\d{2})? ?(am|pm)/i);
+      if (timeMatch) {
+        let hour = parseInt(timeMatch[1]);
+        const period = timeMatch[3].toLowerCase();
+        if (period === 'am' && hour >= 0 && hour <= 5) {
+          explanation = 'Suspicious: Logins between 12 AM and 5 AM are unusual.';
+          return { isAnomaly: true, explanation };
+        }
+      }
+
+      // Rule 3: Check for unrecognized IPs
+      const ipMatch = action.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+      if (ipMatch) {
+        const ip = ipMatch[1];
+        if (!safeIPs.includes(ip)) {
+          explanation = `Suspicious: IP ${ip} is not recognized as a safe source.`;
+          return { isAnomaly: true, explanation };
+        }
+      }
+
+      // Default: Normal
+      explanation = 'Normal: No suspicious patterns detected.';
+      return { isAnomaly: false, explanation };
+    }
+
+    analyzeBtn.addEventListener('click', () => {
+      const action = systemActionInput.value.trim();
+      if (!action) {
+        resultDiv.innerHTML = '<p class="text-red-400">Please enter a system action.</p>';
+        return;
+      }
+
+      const { isAnomaly, explanation } = detectAnomaly(action);
+      resultDiv.innerHTML = `
+        <p class="${isAnomaly ? 'text-red-400' : 'text-green-400'} font-semibold">
+          ${isAnomaly ? 'Suspicious' : 'Normal'}
+        </p>
+        <p class="text-gray-300">${explanation}</p>
+      `;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      systemActionInput.value = '';
+      resultDiv.innerHTML = '<p class="text-gray-400">Enter an action and click Analyze to see results.</p>';
+    });
+  </script>
+</body>
+</html>

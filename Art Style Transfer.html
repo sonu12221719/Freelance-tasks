@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Art Style Transfer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.23.0/dist/tf.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'custom-purple': '#6666ff',
+            'custom-dark': '#282c34',
+            'custom-pink': '#ff79c6',
+            'custom-blue': '#6272a4',
+          },
+          fontFamily: {
+            'montserrat': ['Montserrat', 'sans-serif'],
+            'opensans': ['Open Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .theme-toggle {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background: #4a5568;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .theme-toggle::before {
+      content: '';
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      background: white;
+      transition: transform 0.3s;
+    }
+    .dark .theme-toggle::before {
+      transform: translateX(30px);
+    }
+    .dark .theme-toggle {
+      background: #2d3748;
+    }
+    .image-container {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .image-container:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .control-panel {
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+    .control-panel:hover {
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .style-option {
+      transition: all 0.3s ease;
+    }
+    .style-option:hover {
+      transform: scale(1.02);
+    }
+    /* Add new styles for improved UI */
+    .custom-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236666ff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.5em;
+      padding-right: 2.5rem;
+      transition: all 0.3s ease;
+    }
+    .custom-select:focus {
+      outline: none;
+      border-color: #6666ff;
+      box-shadow: 0 0 0 3px rgba(102, 102, 255, 0.2);
+    }
+    .custom-select:hover {
+      border-color: #6666ff;
+    }
+    .custom-range {
+      -webkit-appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #6666ff, #ff79c6);
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .custom-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      cursor: pointer;
+      border: 2px solid #6666ff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+    }
+    .custom-range::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      border-color: #ff79c6;
+    }
+    .custom-range::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      cursor: pointer;
+      border: 2px solid #6666ff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+    }
+    .custom-range::-moz-range-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      border-color: #ff79c6;
+    }
+    /* Remove number input spinners */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    .number-input {
+      width: 100%;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .number-input.invalid {
+      border-color: #ef4444;
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+    .validation-message {
+      font-size: 0.75rem;
+      color: #ef4444;
+      margin-top: 0.25rem;
+      display: none;
+    }
+    .validation-message.show {
+      display: block;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      nav {
+        width: 95% !important;
+        padding: 1rem !important;
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .main-container {
+        width: 95% !important;
+        padding: 1rem !important;
+      }
+
+      .image-container {
+        height: 300px !important;
+      }
+
+      .control-panel {
+        padding: 1rem !important;
+      }
+
+      .control-panel .grid {
+        gap: 1.5rem !important;
+      }
+
+      .custom-select,
+      .number-input {
+        font-size: 14px;
+        padding: 0.75rem !important;
+      }
+
+      #apply-style {
+        padding: 0.75rem !important;
+        font-size: 14px;
+      }
+
+      .idea-popup {
+        padding: 1rem !important;
+      }
+
+      .idea-popup .max-w-lg {
+        width: 95% !important;
+        margin: 0 auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 0.5rem !important;
+      }
+
+      nav {
+        padding: 0.75rem !important;
+      }
+
+      h1 {
+        font-size: 1.5rem !important;
+      }
+
+      .image-container {
+        height: 250px !important;
+      }
+
+      .control-panel .grid {
+        gap: 1rem !important;
+      }
+
+      .custom-select,
+      .number-input {
+        font-size: 13px;
+        padding: 0.5rem !important;
+      }
+
+      #apply-style {
+        padding: 0.5rem !important;
+        font-size: 13px;
+      }
+    }
+
+    #error-message {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background-color: #ef4444;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(-1rem) scale(0.95);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    #error-message::before {
+      content: '';
+      width: 4px;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.3);
+      position: absolute;
+      left: 0;
+      top: 0;
+      border-radius: 0.75rem 0 0 0.75rem;
+    }
+
+    #error-message.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .dark #error-message {
+      background-color: #dc2626;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode adjustments */
+    .dark .control-panel {
+      background: rgba(0, 0, 0, 0.8);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark .custom-select,
+    .dark .number-input {
+      background-color: #1a1a1a;
+      border-color: #333;
+    }
+
+    .dark .custom-range {
+      background: linear-gradient(to right, #4a5568, #805ad5);
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center p-6 min-h-screen bg-gradient-to-r from-pink-100 to-pink-200 dark:from-[#222222] dark:to-[#212121] text-gray-800 dark:text-gray-100 font-opensans transition-colors duration-300">
+  <nav class="flex flex-row items-center justify-between w-2/3 rounded-full bg-white/70 dark:bg-black/70 p-4 pl-10 mb-6 shadow-lg backdrop-blur-sm">
+    <div>
+      <h1 class="text-3xl font-bold text-custom-pink font-montserrat">Art Style Transfer</h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="theme-toggle" id="theme-toggle" role="button" aria-label="Toggle theme"></div>
+    </div>
+  </nav>
+
+  <!-- Add popup modal -->
+  <div id="idea-popup" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
+    <div class="bg-white dark:bg-custom-dark p-6 rounded-xl max-w-lg w-full mx-4 relative">
+      <button id="close-popup" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <h2 class="text-2xl font-bold text-custom-pink mb-4 font-montserrat">How to Use Art Style Transfer</h2>
+      <div class="space-y-4 text-gray-700 dark:text-gray-300">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-custom-blue/20 flex items-center justify-center">
+            <span class="text-custom-blue font-bold">1</span>
+          </div>
+          <p>Upload your image by clicking on the "Original Image" area or drag and drop an image file.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-custom-blue/20 flex items-center justify-center">
+            <span class="text-custom-blue font-bold">2</span>
+          </div>
+          <p>Choose your desired art style from the dropdown menu (Van Gogh, Monet, or Picasso).</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-custom-blue/20 flex items-center justify-center">
+            <span class="text-custom-blue font-bold">3</span>
+          </div>
+          <p>Adjust the style intensity and contrast using the sliders to achieve your desired effect.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-custom-blue/20 flex items-center justify-center">
+            <span class="text-custom-blue font-bold">4</span>
+          </div>
+          <p>Click "Apply Style" to transform your image. Once processed, you can export the result using the download button.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container bg-white/70 dark:bg-black/70 p-8 rounded-2xl shadow-xl w-2/3 mx-auto backdrop-blur-sm">
+    <div>
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <p class="text-2xl font-bold text-gray-600 dark:text-gray-300">Transform your images into stunning art styles</p>
+        <button id="idea-button" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300" aria-label="Show Information">
+          <svg class="w-5 h-5 text-custom-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <div class="flex flex-col">
+        <h2 class="text-lg font-semibold mb-2 text-center font-montserrat text-gray-800 dark:text-gray-100">Original Image</h2>
+        <div id="original-image" class="image-container border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-black/50 h-[400px] flex justify-center items-center overflow-hidden cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300">
+          <div class="text-center p-4">
+            <svg class="w-16 h-16 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400 text-lg">Click to upload image</p>
+            <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">or drag and drop</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col">
+        <h2 class="text-lg font-semibold mb-2 text-center font-montserrat text-gray-800 dark:text-gray-100">Stylized Image</h2>
+        <div id="stylized-image" class="image-container border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-black/50 h-[400px] flex justify-center items-center overflow-hidden relative group">
+          <div class="text-center p-4">
+            <svg class="w-16 h-16 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400 text-lg">Your stylized image will appear here</p>
+          </div>
+          <button 
+            id="export-image" 
+            class="absolute bottom-4 right-4 bg-custom-blue/90 hover:bg-custom-pink/90 text-white px-4 py-2 rounded-lg transition-all duration-300 font-montserrat transform hover:scale-105 focus:ring-2 focus:ring-custom-pink focus:ring-offset-2 opacity-0 group-hover:opacity-100 backdrop-blur-sm flex items-center gap-2 z-50"
+            aria-label="Export Stylized Image"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            Export
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-panel bg-white/80 dark:bg-black/80 p-8 rounded-2xl mb-8 shadow-lg backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="flex flex-col space-y-3">
+          <label for="style-select" class="font-medium text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <svg class="w-5 h-5 text-custom-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+            </svg>
+            <span>Art Style</span>
+          </label>
+          <div class="relative">
+            <select id="style-select" class="w-full style-option custom-select border-2 border-gray-300 dark:border-gray-600 p-3 rounded-xl bg-white dark:bg-custom-dark text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-custom-pink focus:border-transparent transition-all duration-300 hover:border-custom-pink/50" aria-label="Select Style">
+              <option value="udnie">Van Gogh</option>
+              <option value="wave">Monet</option>
+              <option value="la_muse">Picasso</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-col space-y-3">
+          <label for="style-intensity" class="font-medium text-gray-800 dark:text-gray-100 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-custom-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              <span>Style Intensity</span>
+            </div>
+            <span id="intensity-value" class="text-custom-pink font-semibold bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-sm">1.0</span>
+          </label>
+          <div class="relative">
+            <input
+              id="style-intensity"
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value="1"
+              aria-label="Style Intensity"
+              class="custom-range w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+            />
+            <div class="absolute -bottom-6 left-0 right-0 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+              <span>Subtle</span>
+              <span>Bold</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col space-y-3">
+          <label for="contrast" class="font-medium text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            <svg class="w-5 h-5 text-custom-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+            </svg>
+            <span>Contrast</span>
+          </label>
+          <div class="relative">
+            <input 
+              id="contrast" 
+              type="number" 
+              value="1" 
+              min="0.5" 
+              max="2" 
+              step="0.1" 
+              class="w-full style-option number-input border-2 border-gray-300 dark:border-gray-600 p-3 rounded-xl bg-white dark:bg-custom-dark text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-custom-pink focus:border-transparent transition-all duration-300 hover:border-custom-pink/50" 
+              aria-label="Contrast"
+            />
+            <span id="contrast-validation" class="validation-message">Please enter a value between 0.5 and 2.0</span>
+          </div>
+        </div>
+
+        <div class="flex items-end">
+          <button
+            id="apply-style"
+            class="w-full bg-gradient-to-r from-custom-blue to-custom-pink text-white px-6 py-3 rounded-xl hover:from-custom-pink hover:to-custom-blue transition-all duration-300 font-bold font-montserrat transform hover:scale-105 focus:ring-2 focus:ring-custom-pink focus:ring-offset-2 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+            aria-label="Apply Style"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+            </svg>
+            Apply Style
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 text-white">
+    <div class="bg-white/10 p-8 rounded-xl flex items-center">
+      <div class="animate-spin inline-block w-8 h-8 border-4 border-white border-t-transparent rounded-full" role="status"></div>
+      <span class="ml-4 text-lg">Processing your masterpiece...</span>
+    </div>
+  </div>
+
+  <!-- Add file input element -->
+  <input type="file" id="image-upload" accept="image/*" class="hidden" />
+
+  <!-- Add error message element -->
+  <div id="error-message" class="hidden fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg"></div>
+
+  <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+      }
+    });
+
+    const upload = document.getElementById('image-upload');
+    const select = document.getElementById('style-select');
+    const intensity = document.getElementById('style-intensity');
+    const contrast = document.getElementById('contrast');
+    const intensityVal = document.getElementById('intensity-value');
+    const applyBtn = document.getElementById('apply-style');
+    const exportBtn = document.getElementById('export-image');
+    const errMsg = document.getElementById('error-message');
+    const contrastValidation = document.getElementById('contrast-validation');
+    const originalImageContainer = document.getElementById('original-image');
+    let imgElement = null;
+    let stylizedImgElement = null;
+    let modelCache = {};
+
+    // Hide the file input
+    upload.style.display = 'none';
+
+    // Add click handler to the original image container
+    originalImageContainer.addEventListener('click', () => {
+      upload.click();
+    });
+
+    intensity.addEventListener('input', () => {
+      intensityVal.textContent = intensity.value;
+    });
+
+    upload.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !file.type.startsWith('image/')) {
+               showError('Please upload a valid image.');
+        return;
+      }
+      clearError();
+      imgElement = await loadImage(file);
+      renderImage(imgElement, 'original-image');
+    });
+
+    // Add contrast input validation
+    contrast.addEventListener('input', validateContrast);
+    contrast.addEventListener('blur', validateContrast);
+
+    function validateContrast() {
+      const value = parseFloat(contrast.value);
+      const isValid = !isNaN(value) && value >= 0.5 && value <= 2.0;
+      
+      contrast.classList.toggle('invalid', !isValid);
+      contrastValidation.classList.toggle('show', !isValid);
+      
+      if (!isValid) {
+        if (value < 0.5) contrast.value = 0.5;
+        if (value > 2.0) contrast.value = 2.0;
+      }
+      
+      return isValid;
+    }
+
+    // Update apply button click handler
+    applyBtn.addEventListener('click', async () => {
+      if (!imgElement) {
+        showError('Please upload an image first.');
+        return;
+      }
+      if (!validateContrast()) {
+        showError('Please enter a valid contrast value between 0.5 and 2.0.');
+        return;
+      }
+      clearError();
+      showLoading();
+      applyBtn.disabled = true;
+
+      try {
+        const modelName = select.value;
+        let model = modelCache[modelName];
+        if (!model) {
+          model = await loadModel(modelName);
+          modelCache[modelName] = model;
+        }
+
+        stylizedImgElement = await applyStyleTransfer(imgElement, model, +intensity.value, +contrast.value);
+        renderImage(stylizedImgElement, 'stylized-image');
+      } catch (error) {
+        console.error('Error applying style transfer:', error);
+        showError('Failed to apply style transfer. Please try again.');
+      } finally {
+        applyBtn.disabled = false;
+        hideLoading();
+      }
+    });
+
+    exportBtn.addEventListener('click', () => {
+      if (stylizedImgElement) {
+        const a = document.createElement('a');
+        a.href = stylizedImgElement.src;
+        a.download = 'stylized-image.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        showError('No stylized image to export.');
+      }
+    });
+
+    function showLoading() {
+      document.getElementById('loading').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').classList.add('hidden');
+    }
+
+    function showError(msg) {
+      errMsg.textContent = msg;
+      errMsg.classList.remove('hidden');
+      errMsg.classList.add('show');
+      
+      // Automatically hide the error message after 2 seconds
+      setTimeout(() => {
+        errMsg.classList.remove('show');
+        setTimeout(() => {
+          errMsg.classList.add('hidden');
+        }, 300); // Wait for fade out animation to complete
+      }, 2000);
+    }
+
+    function clearError() {
+      errMsg.classList.remove('show');
+      setTimeout(() => {
+        errMsg.classList.add('hidden');
+      }, 300);
+    }
+
+    function loadImage(file) {
+      return new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => res(img);
+        img.onerror = () => rej(new Error('Failed to load image'));
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    async function loadModel(styleKey) {
+      // Simulate model loading with a delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return {
+        style: styleKey,
+        loaded: true
+      };
+    }
+
+    async function applyStyleTransfer(image, model, blend, contrastValue) {
+      try {
+        // Create a canvas for processing
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+
+        // Draw the original image
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        // Get image data for processing
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // Apply different effects based on the selected style
+        switch(model.style) {
+          case 'udnie':
+            // Van Gogh style - vibrant colors and brush-like strokes
+            for (let i = 0; i < data.length; i += 4) {
+              // Increase saturation and add yellow tint
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+              
+              // Apply Van Gogh-like color transformation
+              data[i] = Math.min(255, r * 1.2 + g * 0.1);     // Red
+              data[i + 1] = Math.min(255, g * 1.1 + r * 0.1); // Green
+              data[i + 2] = Math.min(255, b * 0.8);           // Blue
+              
+              // Add some noise for brush-like effect
+              const noise = Math.random() * 20 - 10;
+              data[i] = Math.max(0, Math.min(255, data[i] + noise));
+              data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+              data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+            }
+            break;
+          case 'wave':
+            // Monet style - soft pastel colors and impressionistic effect
+            for (let i = 0; i < data.length; i += 4) {
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+              
+              // Create soft pastel effect
+              data[i] = Math.min(255, r * 0.9 + 30);     // Red
+              data[i + 1] = Math.min(255, g * 0.9 + 30); // Green
+              data[i + 2] = Math.min(255, b * 0.9 + 30); // Blue
+              
+              // Add slight blur effect
+              if (i > 0 && i < data.length - 4) {
+                data[i] = (data[i] + data[i - 4] + data[i + 4]) / 3;
+                data[i + 1] = (data[i + 1] + data[i - 3] + data[i + 5]) / 3;
+                data[i + 2] = (data[i + 2] + data[i - 2] + data[i + 6]) / 3;
+              }
+            }
+            break;
+          case 'la_muse':
+            // Picasso style - cubist effect with bold colors
+            for (let i = 0; i < data.length; i += 4) {
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+              
+              // Create cubist-like color blocks
+              const threshold = 128;
+              data[i] = r > threshold ? 255 : 0;     // Red
+              data[i + 1] = g > threshold ? 255 : 0; // Green
+              data[i + 2] = b > threshold ? 255 : 0; // Blue
+              
+              // Add geometric patterns
+              if ((i / 4) % 8 === 0) {
+                data[i] = 255;
+                data[i + 1] = 0;
+                data[i + 2] = 0;
+              }
+            }
+            break;
+        }
+
+        // Apply contrast
+        const contrast = contrastValue;
+        const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = factor * (data[i] - 128) + 128;
+          data[i + 1] = factor * (data[i + 1] - 128) + 128;
+          data[i + 2] = factor * (data[i + 2] - 128) + 128;
+        }
+
+        // Apply blend factor
+        if (blend < 1) {
+          const originalData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+          for (let i = 0; i < data.length; i += 4) {
+            data[i] = data[i] * blend + originalData[i] * (1 - blend);
+            data[i + 1] = data[i + 1] * blend + originalData[i + 1] * (1 - blend);
+            data[i + 2] = data[i + 2] * blend + originalData[i + 2] * (1 - blend);
+          }
+        }
+
+        // Put the modified image data back
+        ctx.putImageData(imageData, 0, 0);
+
+        // Create result image
+        const result = new Image();
+        result.src = canvas.toDataURL();
+        await new Promise(res => (result.onload = res));
+        
+        return result;
+      } catch (error) {
+        console.error('Error applying style transfer:', error);
+        throw new Error('Failed to apply style transfer');
+      }
+    }
+
+    function renderImage(img, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = ''; 
+      
+      if (containerId === 'stylized-image') {
+        // Create a wrapper div for the stylized image
+        const wrapper = document.createElement('div');
+        wrapper.className = 'w-full h-full flex items-center justify-center group relative';
+        wrapper.appendChild(img);
+        
+        // Create a new export button instead of cloning
+        const exportBtn = document.createElement('button');
+        exportBtn.id = 'export-image';
+        exportBtn.className = 'absolute bottom-4 right-4 bg-custom-blue/90 hover:bg-custom-pink/90 text-white px-4 py-2 rounded-lg transition-all duration-300 font-montserrat transform hover:scale-105 focus:ring-2 focus:ring-custom-pink focus:ring-offset-2 opacity-0 group-hover:opacity-100 backdrop-blur-sm flex items-center gap-2 z-50';
+        exportBtn.setAttribute('aria-label', 'Export Stylized Image');
+        
+        // Add SVG icon
+        exportBtn.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          Export
+        `;
+        
+        // Add click event listener
+        exportBtn.addEventListener('click', () => {
+          if (img) {
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = 'stylized-image.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            showError('No stylized image to export.');
+          }
+        });
+        
+        wrapper.appendChild(exportBtn);
+        container.appendChild(wrapper);
+      } else {
+        // For original image, just append the image
+        container.appendChild(img);
+      }
+      
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      
+      // Add group class to container when rendering stylized image
+      if (containerId === 'stylized-image') {
+        container.classList.add('group');
+      }
+    }
+
+    // Add this to your existing script section
+    const ideaButton = document.getElementById('idea-button');
+    const ideaPopup = document.getElementById('idea-popup');
+    const closePopup = document.getElementById('close-popup');
+
+    ideaButton.addEventListener('click', () => {
+      ideaPopup.classList.remove('hidden');
+    });
+
+    closePopup.addEventListener('click', () => {
+      ideaPopup.classList.add('hidden');
+    });
+
+    // Close popup when clicking outside
+    ideaPopup.addEventListener('click', (e) => {
+      if (e.target === ideaPopup) {
+        ideaPopup.classList.add('hidden');
+      }
+    });
+
+    // Close popup with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !ideaPopup.classList.contains('hidden')) {
+        ideaPopup.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Layer Your Look</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        brand: "#2563eb",
+                        accent: {DEFAULT: "#34d399", dark: "#2dd4bf"},
+                        accent2: "#f472b6",
+                        surface: {DEFAULT: "#f8fafc", dark: "#1e293b"},
+                        neutral: {DEFAULT: "#6b7280", dark: "#9ca3af"}
+                    },
+                    fontFamily: {
+                        sans: ["'Inter', system-ui, sans-serif"],
+                        display: ["'Poppins', sans-serif"],
+                        title: ["'Montserrat', sans-serif"]
+                    },
+                    boxShadow: {
+                        card: "0 2px 8px rgba(0,0,0,0.1)",
+                        canvas: "0 4px 16px rgba(0,0,0,0.06)",
+                        glass: "0 2px 12px rgba(0,0,0,0.08)"
+                    },
+                    keyframes: {
+                        pop: {
+                            "0%": {transform: "scale(.95)", opacity: "0"},
+                            "100%": {transform: "scale(1)", opacity: "1"}
+                        },
+                        fadeIn: {
+                            "0%": {opacity: "0.5"},
+                            "100%": {opacity: "1"}
+                        },
+                        slideIn: {
+                            "0%": {transform: "translateY(20px)", opacity: "0"},
+                            "100%": {transform: "translateY(0)", opacity: "1"}
+                        },
+                        pulse: {
+                            "0%": {transform: "scale(1)"},
+                            "50%": {transform: "scale(1.05)"},
+                            "100%": {transform: "scale(1)"}
+                        },
+                        shimmer: {
+                            "0%": {backgroundPosition: "-200% 0"},
+                            "100%": {backgroundPosition: "200% 0"}
+                        },
+                        float: {
+                            "0%": {transform: "translateY(0px)"},
+                            "50%": {transform: "translateY(-5px)"},
+                            "100%": {transform: "translateY(0px)"}
+                        }
+                    },
+                    animation: {
+                        pop: "pop .3s ease-out",
+                        fadeIn: "fadeIn .4s ease",
+                        slideIn: "slideIn .4s ease-out",
+                        pulse: "pulse 2s ease-in-out infinite",
+                        shimmer: "shimmer 3s ease-in-out infinite",
+                        float: "float 3s ease-in-out infinite"
+                    },
+                    typography: {
+                        DEFAULT: {
+                            css: {
+                                h1: {fontWeight: "700", letterSpacing: "-0.025em", lineHeight: "1.2"},
+                                h2: {fontWeight: "600", letterSpacing: "-0.015em", lineHeight: "1.3"},
+                                h3: {fontWeight: "600", lineHeight: "1.4"},
+                                p: {lineHeight: "1.75"}
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700&family=Montserrat:wght@700;800;900&display=swap">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #f8fafc, #e2e8f0);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+        }
+
+        html.dark body {
+            background: linear-gradient(to bottom right, #0f172a, #1e293b);
+        }
+
+        .hover-card {
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border: none;
+            background-image: linear-gradient(to bottom, #ffffff, #f8fafc);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        html.dark .hover-card {
+            background-image: linear-gradient(to bottom, #1e293b, #0f172a);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .hover-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            background-image: linear-gradient(to bottom right, #ffffff, #fdf2f8);
+        }
+
+        html.dark .hover-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            background-image: linear-gradient(to bottom right, #1e293b, #18181b);
+        }
+
+        .hover-card:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .glass {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            min-height: 300px;
+            height: auto;
+            max-height: 80vh;
+        }
+
+        html.light .glass {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        html.dark .glass {
+            background: rgba(30, 41, 59, 0.7);
+        }
+
+        .filter-btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            border: 1px solid transparent;
+            margin-right: 0.5rem;
+        }
+
+        .filter-btn:last-child {
+            margin-right: 0;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(to right, #f472b6, #ec4899);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(244, 114, 182, 0.25);
+        }
+
+        .filter-btn:not(.active) {
+            background: #f3f4f6;
+            color: #4b5563;
+            border-color: #e5e7eb;
+        }
+
+        .filter-btn:not(.active):hover {
+            background: #f9fafb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        html.dark .filter-btn:not(.active) {
+            background: #334155;
+            color: #e2e8f0;
+            border-color: #475569;
+        }
+
+        html.dark .filter-btn:not(.active):hover {
+            background: #1e293b;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .dropzone {
+            min-height: 120px;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 10;
+            padding: 0.75rem;
+        }
+
+        html.dark .dropzone {
+            border-color: #475569;
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        .dropzone.hovered {
+            border-color: #f472b6;
+            background: rgba(244, 114, 182, 0.1);
+            box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.15);
+        }
+
+        .dropzone:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.3);
+        }
+
+        .dropzone.empty::before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 500;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        html.dark .dropzone.empty::before {
+            color: #6b7280;
+        }
+
+        .dropzone li {
+            position: relative;
+            cursor: default;
+            margin-top: -80px;
+            animation: pop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 20;
+        }
+
+        .dropzone li:first-child {
+            margin-top: 0;
+        }
+
+        .dropzone img {
+            max-height: 96px;
+            max-width: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            transition: all 0.3s ease;
+        }
+
+        .dropzone li:hover img {
+            transform: scale(1.05);
+            filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.15));
+        }
+
+        .del-btn {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 28px;
+            height: 28px;
+            background: rgba(244, 114, 182, 0.9);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 16px;
+            line-height: 28px;
+            text-align: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transform: scale(0.8);
+        }
+
+        li:hover .del-btn {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #themeToggle {
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border: 2px solid transparent;
+        }
+
+        #themeToggle:hover {
+            transform: scale(1.1) rotate(12deg);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        html.dark #themeToggle {
+            background: #6b7280;
+        }
+
+        #inventory {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-auto-rows: 120px;
+            @apply gap-4;
+            overflow-y: auto;
+            height: 100%;
+            scrollbar-width: thin;
+            scrollbar-color: #d1d5db #f8fafc;
+            @apply p-6;
+            @apply rounded-xl;
+        }
+
+        html.dark #inventory {
+            scrollbar-color: #6b7280 #1e293b;
+        }
+
+        #inventory::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #inventory::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 3px;
+        }
+
+        html.dark #inventory::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        #inventory::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        html.dark #inventory::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+
+        #inventory li {
+            @apply min-h-20 lg:min-h-[120px] lg:w-full;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 1rem 1.25rem;
+        }
+
+        footer {
+            background: linear-gradient(to top, rgba(244, 114, 182, 0.1), transparent);
+        }
+
+        .canvas-container {
+            border: none;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        html.dark .canvas-container {
+            background: rgba(30, 41, 59, 0.7);
+        }
+
+        .canvas-container:hover {
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            background: linear-gradient(to bottom, rgba(244, 114, 182, 0.15), transparent);
+            position: relative;
+        }
+
+        html.dark header {
+            background: linear-gradient(to bottom, rgba(244, 114, 182, 0.15), transparent);
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(to right, #f472b6, #34d399);
+            border-radius: 2px;
+        }
+
+        #orderLabel.updated {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .nav-link:hover {
+            background: rgba(244, 114, 182, 0.1);
+            color: #f472b6;
+            transform: translateY(-1px);
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 90%;
+            width: 450px;
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        html.dark .modal-content {
+            background: #1e293b;
+            border: 1px solid rgba(75, 85, 99, 0.4);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: white;
+            color: #1f2937;
+            border-radius: 8px;
+            padding: 12px 16px;
+            min-width: 250px;
+            max-width: 350px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: all;
+            border-left: 4px solid #f472b6;
+        }
+
+        html.dark .toast {
+            background: #1e293b;
+            color: #f3f4f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.success {
+            border-left-color: #34d399;
+        }
+
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast .toast-content {
+            flex: 1;
+        }
+
+        .toast .toast-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 2px;
+        }
+
+        .toast .toast-message {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        html.dark .toast .toast-message {
+            color: #9ca3af;
+        }
+
+        .toast .toast-close {
+            color: #9ca3af;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .toast .toast-close:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #6b7280;
+        }
+
+        html.dark .toast .toast-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #d1d5db;
+        }
+
+        /* Archive list styles */
+        .archive-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+
+        .archive-item {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        html.dark .archive-item {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .archive-item:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        html.dark .archive-item:hover {
+            background: #111827;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .actions-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-icon:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #4b5563;
+        }
+
+        html.dark .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #d1d5db;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #f472b6, #ec4899);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 4px rgba(244, 114, 182, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(244, 114, 182, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        html.dark .btn-secondary {
+            background: #374151;
+            color: #e5e7eb;
+            border-color: #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        html.dark .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(255, 255, 255, 0.5) 50%,
+                    rgba(255, 255, 255, 0) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        html.dark .shimmer {
+            background: linear-gradient(90deg,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(255, 255, 255, 0.1) 50%,
+                    rgba(255, 255, 255, 0) 100%);
+            background-size: 200% 100%;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 1023px) {
+            .canvas-container {
+                min-height: 400px;
+                max-height: none;
+                height: auto;
+            }
+
+            main {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+        }
+
+        /* Touch targets for mobile */
+        @media (max-width: 640px) {
+            .del-btn {
+                width: 36px;
+                height: 36px;
+                line-height: 36px;
+                font-size: 20px;
+                opacity: 0.9;
+                transform: scale(1);
+            }
+
+            .btn-primary,
+            .btn-secondary,
+            .filter-btn {
+                padding: 0.625rem 1rem;
+            }
+
+            /* More space between action buttons */
+            .action-bar {
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                justify-content: space-around;
+            }
+
+            .dropzone {
+                min-height: 100px;
+                padding: 1rem;
+            }
+
+            /* Adjust modal for mobile screens */
+            .modal-content {
+                max-width: 95%;
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+            /* Make archive list more compact on mobile */
+            .archive-list {
+                max-height: 60vh;
+            }
+
+            .archive-item {
+                padding: 0.5rem;
+            }
+
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            #themeToggle {
+                top: 1rem;
+                right: 1rem;
+            }
+
+            /* Toast for mobile */
+            .toast-container {
+                bottom: 16px;
+                right: 16px;
+                left: 16px;
+            }
+
+            .toast {
+                min-width: 0;
+                max-width: 100%;
+            }
+
+            .drag-ghost {
+                transform: scale(1.1);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #inventory {
+                grid-template-columns: 1fr;
+                grid-auto-rows: auto;
+            }
+
+            #inventory li {
+                min-height: 80px;
+            }
+
+            .filter-bar {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 0.5rem;
+            }
+
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .action-bar button {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Add mobile touch feedback for draggable items */
+        .active-touch {
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(244, 114, 182, 0.3);
+            z-index: 20;
+        }
+
+        /* Mobile dragging indicator */
+        body.dragging-active {
+            cursor: grabbing;
+        }
+
+        body.dragging-active .dropzone {
+            border-color: rgba(244, 114, 182, 0.5);
+            background-color: rgba(244, 114, 182, 0.05);
+        }
+
+        .filter-bar-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 1.25rem 1.5rem 0.75rem;
+        }
+
+        .filter-bar-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .dropzone.valid-drop {
+            border-color: #34d399;
+            background-color: rgba(52, 211, 153, 0.1);
+            box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
+        }
+
+        .dropzone.invalid-drop {
+            border-color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        }
+
+        .drag-ghost {
+            opacity: 0.8;
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropzone.drag-over {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+
+        @media (max-width: 640px) {
+            .drag-ghost {
+                transform: scale(1.1);
+            }
+        }
+
+        /* Add these styles to hide scrollbar but keep functionality */
+        .scrollbar-hide {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;  /* Chrome, Safari and Opera */
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col text-gray-900 dark:text-gray-100">
+    <!-- Header section with theme toggle moved to top right -->
+    <header class="w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 text-center relative">
+        <button id="themeToggle" aria-label="Toggle dark / light mode"
+            class="fixed top-4 right-4 sm:top-6 sm:right-6 lg:right-8 p-2 w-10 h-10 bg-gradient-to-br from-accent2 to-accent2/80 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-accent2 focus:ring-offset-2 shadow-lg transition-all duration-300 z-50">
+            <span class="material-icons-round block dark:hidden text-base">dark_mode</span>
+            <span class="material-icons-round hidden dark:block text-base">light_mode</span>
+        </button>
+
+        <div class="flex items-center justify-center gap-3 sm:gap-4">
+            <div class="relative group">
+                <div
+                    class="absolute inset-0 bg-gradient-to-r from-accent2 to-accent rounded-xl blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300">
+                </div>
+                <div
+                    class="relative flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gradient-to-br from-brand to-accent2 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 animate-float">
+                    <span class="material-icons-round text-white text-2xl sm:text-3xl">layers</span>
+                </div>
+            </div>
+            <h1
+                class="font-title text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-gray-800 dark:text-white drop-shadow-lg relative">
+                <span class="relative z-10">Layer Your Look</span>
+            </h1>
+        </div>
+        <p class="mt-2 sm:mt-3 text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-400">
+            Create your perfect outfit with drag-and-drop layering
+        </p>
+    </header>
+
+    <!-- Main content section with responsive grid -->
+    <main class="flex-1 w-full max-w-8xl mx-auto px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-8">
+            <!-- Left column (inventory) -->
+            <div
+                class="glass rounded-xl shadow-lg overflow-hidden flex flex-col h-auto min-h-[300px] max-h-[80vh] md:max-h-[700px] relative before:absolute before:inset-0 before:bg-gradient-to-r before:from-accent2/20 before:to-transparent before:blur-xl before:opacity-50 before:-z-10">
+                <div
+                    class="p-2 sm:p-4 border-b border-gray-200/30 dark:border-gray-700/30 overflow-x-auto pb-1 filter-bar-container">
+                    <div class="flex flex-nowrap gap-2 sm:gap-3 min-w-min" id="filterBar"></div>
+                </div>
+                <ul id="inventory" class="p-2"></ul>
+            </div>
+
+            <!-- Right column (canvas) -->
+            <div class="glass rounded-xl shadow-lg flex flex-col h-auto min-h-[300px] max-h-[80vh] md:max-h-[700px] p-2 sm:p-4 relative before:absolute before:inset-0 before:bg-gradient-to-l before:from-accent2/20 before:to-transparent before:blur-xl before:opacity-50 before:-z-10">
+                <!-- Action bar with Reset and Archive buttons -->
+                <div class="p-2 sm:p-4 border-b border-gray-200/30 dark:border-gray-700/30">
+                    <div class="action-bar flex flex-wrap justify-center gap-2 sm:gap-4">
+                        <button id="resetBtn"
+                            class="btn-primary flex items-center gap-2 px-2 sm:px-4 py-2 bg-accent2 hover:bg-accent2/90 text-sm sm:text-base">
+                            <span class="material-icons-round text-white text-sm">refresh</span>
+                            Reset Outfit
+                        </button>
+                        <button id="saveOutfitBtn" class="btn-primary flex items-center gap-2 px-2 sm:px-4 py-2 text-sm sm:text-base">
+                            <span class="material-icons-round text-white text-sm">save</span>
+                            Save Outfit
+                        </button>
+                        <button id="archiveBtn" class="btn-secondary flex items-center gap-2 px-2 sm:px-4 py-2 text-sm sm:text-base">
+                            <span class="material-icons-round text-sm">folder</span>
+                            Outfit Archive
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dropzones for outfit items -->
+                <div class="grid grid-cols-1 gap-3 sm:gap-6 overflow-y-auto max-h-[600px] sm:max-h-[480px] scrollbar-hide p-2 sm:p-4 border-2 border-gray-200/30 dark:border-gray-700/30 rounded-lg">
+                    <!-- Hat Dropzone -->
+                    <div id="hatDropzoneContainer" class="category-dropzone">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-icons-round text-accent2">face</span>
+                            <div class="font-display text-sm sm:text-base font-semibold text-gray-900 dark:text-white">Hat</div>
+                        </div>
+                        <ul tabindex="0" aria-describedby="hatDesc" id="hatZone" class="dropzone empty h-32 sm:h-32" data-cat="hat" data-placeholder="Drop Hat Here"></ul>
+                        <span id="hatDesc" class="sr-only">Drop hat here.</span>
+                    </div>
+
+                    <!-- Shirt Dropzone -->
+                    <div id="shirtDropzoneContainer" class="category-dropzone">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-icons-round text-accent2">checkroom</span>
+                            <div class="font-display text-sm sm:text-base font-semibold text-gray-900 dark:text-white">Shirt</div>
+                        </div>
+                        <ul tabindex="0" aria-describedby="shirtDesc" id="shirtZone" class="dropzone empty h-32 sm:h-32" data-cat="shirt" data-placeholder="Drop Shirt Here"></ul>
+                        <span id="shirtDesc" class="sr-only">Drop shirt here.</span>
+                    </div>
+
+                    <!-- Pants Dropzone -->
+                    <div id="pantsDropzoneContainer" class="category-dropzone">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-icons-round text-accent2">accessibility</span>
+                            <div class="font-display text-sm sm:text-base font-semibold text-gray-900 dark:text-white">Pants</div>
+                        </div>
+                        <ul tabindex="0" aria-describedby="pantsDesc" id="pantsZone" class="dropzone empty h-32 sm:h-32" data-cat="pants" data-placeholder="Drop Pants Here"></ul>
+                        <span id="pantsDesc" class="sr-only">Drop pants here.</span>
+                    </div>
+
+                    <!-- Feet Dropzone -->
+                    <div id="feetDropzoneContainer" class="category-dropzone">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-icons-round text-accent2">hiking</span>
+                            <div class="font-display text-sm sm:text-base font-semibold text-gray-900 dark:text-white">Feet</div>
+                        </div>
+                        <ul tabindex="0" aria-describedby="feetDesc" id="feetZone" class="dropzone empty h-32 sm:h-32" data-cat="feet" data-placeholder="Drop Shoes Here"></ul>
+                        <span id="feetDesc" class="sr-only">Drop shoes here.</span>
+                    </div>
+                </div>
+
+                <!-- Layer order visualizer -->
+                <div class="mt-3 sm:mt-4">
+                    <div class="relative overflow-hidden glass p-3 sm:p-5 rounded-xl border border-gray-200/30 dark:border-gray-700/30 shadow-lg">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-accent/20 to-accent2/10 rounded-bl-full -mr-8 -mt-8"></div>
+
+                        <div class="flex items-center gap-3 mb-3 sm:mb-4">
+                            <div class="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-accent2 rounded-lg shadow-md transform transition-all duration-300 hover:rotate-12">
+                                <span class="material-icons-round text-white text-sm sm:text-base">layers</span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white tracking-wide">Layer Order</h3>
+                        </div>
+
+                        <div class="bg-white/70 dark:bg-gray-800/70 rounded-lg p-2 sm:p-4 backdrop-blur-sm border border-gray-100 dark:border-gray-700/50 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons-round text-accent2 animate-pulse text-sm sm:text-base">sort</span>
+                                <p id="orderLabel" class="text-xs sm:text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 tracking-wide">
+                                    Layers: (none)
+                                </p>
+                            </div>
+                            <div class="mt-2 sm:mt-3 space-y-2 hidden" id="layerVisualizer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer section -->
+    <footer class="w-full pb-4 text-center mt-auto">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            © 2025 Layer Your Look — Built with Tailwind CSS
+        </p>
+    </footer>
+
+    <!-- Reset Outfit Modal -->
+    <div id="resetModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="resetModalTitle">
+        <div class="modal-content" role="document">
+            <div class="flex justify-between items-center mb-4 sm:mb-6">
+                <h3 id="resetModalTitle" class="text-xl font-bold text-gray-900 dark:text-white">Reset Your Outfit</h3>
+                <button id="closeResetModal"
+                    class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
+                Are you sure you want to reset your outfit? This will remove all items from your current outfit.
+            </p>
+            <div class="flex justify-end gap-4">
+                <button id="cancelReset" class="btn-secondary">
+                    Cancel
+                </button>
+                <button id="confirmReset" class="btn-primary">
+                    Reset Outfit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Outfit Modal -->
+    <div id="saveModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="saveModalTitle">
+        <div class="modal-content" role="document">
+            <div class="flex justify-between items-center mb-4 sm:mb-6">
+                <h3 id="saveModalTitle" class="text-xl font-bold text-gray-900 dark:text-white">Save Your Outfit</h3>
+                <button id="closeSaveModal"
+                    class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="mb-4 sm:mb-6">
+                <label for="outfitName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Outfit Name
+                </label>
+                <input type="text" id="outfitName"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent2 focus:border-transparent"
+                    placeholder="My Awesome Outfit">
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="cancelSave" class="btn-secondary">
+                    Cancel
+                </button>
+                <button id="confirmSave" class="btn-primary">
+                    Save Outfit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archive Modal -->
+    <div id="archiveModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="archiveModalTitle">
+        <div class="modal-content" role="document">
+            <div class="flex justify-between items-center mb-4 sm:mb-6">
+                <h3 id="archiveModalTitle" class="text-xl font-bold text-gray-900 dark:text-white">Outfit Archive</h3>
+                <button id="closeArchiveModal"
+                    class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div id="archiveList" class="archive-list">
+                <div class="text-gray-500 dark:text-gray-400 text-center p-4 sm:p-6 my-4 sm:my-6"
+                    id="emptyArchiveMessage">
+                    <div class="flex flex-col items-center">
+                        <span
+                            class="material-icons-round text-4xl mb-2 text-gray-300 dark:text-gray-600">folder_open</span>
+                        <p class="mb-2">No saved outfits yet.</p>
+                        <p class="text-sm italic">Create and save your first outfit!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button id="closeArchive" class="btn-secondary">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Outfit Modal -->
+    <div id="renameModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="renameModalTitle">
+        <div class="modal-content" role="document">
+            <div class="flex justify-between items-center mb-4 sm:mb-6">
+                <h3 id="renameModalTitle" class="text-xl font-bold text-gray-900 dark:text-white">Rename Outfit</h3>
+                <button id="closeRenameModal"
+                    class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="mb-4 sm:mb-6">
+                <label for="newOutfitName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    New Outfit Name
+                </label>
+                <input type="text" id="newOutfitName"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent2 focus:border-transparent"
+                    placeholder="My Awesome Outfit">
+                <input type="hidden" id="renameOutfitId">
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="cancelRename" class="btn-secondary">
+                    Cancel
+                </button>
+                <button id="confirmRename" class="btn-primary">
+                    Save New Name
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const ITEMS = [
+            {
+                id: "jeansPants",
+                name: "Jeans Pants",
+                img: "https://purepng.com/public/uploads/large/jeans-pant-xom.png",
+                cat: "pants"
+            },
+            {
+                id: "jeansTrousers",
+                name: "Jeans Trousers",
+                img: "https://purepng.com/public/uploads/large/jeans-trouser-ygl.png",
+                cat: "pants"
+            },
+            {
+                id: "purpleT",
+                name: "Purple T‑Shirt",
+                img: "https://purepng.com/public/uploads/large/purepng.com-men-t-shirtclothingmen-t-shirtfashion-dress-shirt-cloth-tshirt-631522326839zoswy.png",
+                cat: "shirt"
+            },
+            {
+                id: "stylishshirt",
+                name: "Stylish Shirt",
+                img: "https://purepng.com/public/uploads/large/purepng.com-mens-stylish-shirt-bluebutton-front-shirtgarmentdressshirtfullmensstylishblue-1421526306983zzdmy.png",
+                cat: "shirt"
+            },
+            {
+                id: "redT",
+                name: "Red T‑Shirt",
+                img: "https://purepng.com/public/uploads/large/red-t-shirt-plp.png",
+                cat: "shirt"
+            },
+            {
+                id: "cap",
+                name: "Cap",
+                img: "https://purepng.com/public/uploads/large/purepng.com-watch-dog-game-capcapfittedsportssimpleredgamewatch-dog-1421526278148exuh4.png",
+                cat: "hat"
+            },
+            {
+                id: "cowboyhat",
+                name: "Cowboy Hat",
+                img: "https://purepng.com/public/uploads/large/purepng.com-cowboy-hathat-fashion-objects-horse-cap-cowboyclothingcowboy-hat-631522935767jh2w2.png",
+                cat: "hat"
+            },
+            {
+                id: "shoe",
+                name: "Shoe",
+                img: "https://purepng.com/public/uploads/large/purepng.com-bright-red-men-shoesmen-shoesfashiondesignestylehuman-footbright-redsports-1421526391301a3xoe.png",
+                cat: "feet"
+            },
+            {
+                id: "blackHeels",
+                name: "Black Heels",
+                img: "https://purepng.com/public/uploads/large/purepng.com-black-women-shoewomen-shoesfootdesignfoot-wearwomenladiescasualleatherblack-1421526428039tu9hi.png",
+                cat: "feet"
+            }
+        ];
+
+
+        // Category map
+        const catMap = {
+            hat: "hatZone",
+            shirt: "shirtZone",
+            pants: "pantsZone",
+            feet: "feetZone"
+        };
+
+        // Element references
+        const inventory = document.getElementById("inventory");
+        const filterBar = document.getElementById("filterBar");
+        const zones = document.querySelectorAll(".dropzone");
+        const orderLabel = document.getElementById("orderLabel");
+        const resetModal = document.getElementById("resetModal");
+        const resetBtn = document.getElementById("resetBtn");
+        const closeResetModal = document.getElementById("closeResetModal");
+        const cancelReset = document.getElementById("cancelReset");
+        const confirmReset = document.getElementById("confirmReset");
+        const saveModal = document.getElementById("saveModal");
+        const saveOutfitBtn = document.getElementById("saveOutfitBtn");
+        const closeSaveModal = document.getElementById("closeSaveModal");
+        const cancelSave = document.getElementById("cancelSave");
+        const confirmSave = document.getElementById("confirmSave");
+        const archiveModal = document.getElementById("archiveModal");
+        const archiveBtn = document.getElementById("archiveBtn");
+        const closeArchiveModal = document.getElementById("closeArchiveModal");
+        const closeArchive = document.getElementById("closeArchive");
+        const renameModal = document.getElementById("renameModal");
+        const closeRenameModal = document.getElementById("closeRenameModal");
+        const cancelRename = document.getElementById("cancelRename");
+        const confirmRename = document.getElementById("confirmRename");
+        const toastContainer = document.getElementById("toastContainer");
+
+        // Map of category to icon name
+        const catIcons = {
+            "all": "filter_list",
+            "hat": "face",
+            "shirt": "checkroom",
+            "pants": "accessibility",
+            "feet": "hiking"
+        };
+
+        // Local storage key for saved outfits
+        const SAVED_OUTFITS_KEY = "layerYourLook_savedOutfits";
+
+        // Initialize saved outfits array from localStorage
+        let savedOutfits = JSON.parse(localStorage.getItem(SAVED_OUTFITS_KEY) || "[]");
+
+        // Detect mobile devices for UI optimizations
+        function isMobileDevice() {
+            return (window.innerWidth <= 768) ||
+                (navigator.maxTouchPoints > 0 && /Mobi|Android/i.test(navigator.userAgent));
+        }
+
+        // Create filter buttons
+        ["all", "hat", "shirt", "pants", "feet"].forEach((cat) => {
+            const btn = document.createElement("button");
+
+            const icon = document.createElement("span");
+            icon.className = "material-icons-round text-sm mr-1";
+            icon.textContent = catIcons[cat];
+
+            const text = document.createElement("span");
+            text.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+
+            btn.dataset.cat = cat;
+            btn.className =
+                "filter-btn flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-accent2 focus:ring-offset-2 transition-all duration-200" +
+                (cat === "all" ? " active" : "");
+            btn.onclick = () => setFilter(cat);
+
+            btn.appendChild(icon);
+            btn.appendChild(text);
+            filterBar.appendChild(btn);
+        });
+
+        // Current filter state
+        let currentFilter = "all";
+
+        // Set active filter
+        function setFilter(cat) {
+            currentFilter = cat;
+            [...filterBar.children].forEach((b) =>
+                b.classList.toggle("active", b.dataset.cat === cat)
+            );
+            buildInventory(cat);
+        }
+
+        // Build inventory based on filter
+        function buildInventory(filterCat = "all") {
+            inventory.innerHTML = "";
+            ITEMS.filter((item) => filterCat === "all" || item.cat === filterCat).forEach((item) => {
+                const li = document.createElement("li");
+                Object.assign(li.dataset, item);
+                li.className =
+                    "hover-card shadow-card rounded-lg flex items-center gap-4 px-4 py-3 m-1 cursor-grab select-none";
+
+                const img = document.createElement("img");
+                img.src = item.img;
+                img.alt = item.name;
+                img.srcset = `${item.img} 1x, ${item.img} 2x`;
+                img.className = "w-14 h-14 object-contain pointer-events-none";
+                img.setAttribute("loading", "lazy");
+
+                const span = document.createElement("span");
+                span.className = "font-medium text-sm text-gray-900 dark:text-gray-100";
+                span.textContent = item.name;
+
+                li.appendChild(img);
+                li.appendChild(span);
+                inventory.appendChild(li);
+            });
+
+            // Add touch feedback for mobile
+            if (isMobileDevice()) {
+                addTouchFeedback();
+            }
+        }
+
+        // Add touch feedback for inventory items
+        function addTouchFeedback() {
+            const inventoryItems = inventory.querySelectorAll('li');
+            inventoryItems.forEach(item => {
+                item.addEventListener('touchstart', () => {
+                    item.classList.add('active-touch');
+                }, {passive: true});
+
+                item.addEventListener('touchend', () => {
+                    item.classList.remove('active-touch');
+                }, {passive: true});
+
+                item.addEventListener('touchcancel', () => {
+                    item.classList.remove('active-touch');
+                }, {passive: true});
+            });
+        }
+
+        // Initial inventory build
+        buildInventory();
+
+        // Scroll handling for drag operations
+        let inventoryScrollInterval = null;
+        let pageScrollInterval = null;
+
+        // Initialize Sortable on inventory
+        function initSortable() {
+            // Initialize Sortable on inventory with mobile optimizations
+            new Sortable(inventory, {
+                group: {name: "garments", pull: "clone", put: false},
+                sort: false,
+                animation: 150,
+                delay: isMobileDevice() ? 100 : 0,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 5,
+                onStart: () => {
+                    inventory.addEventListener("dragover", handleInventoryDragOver);
+                    document.addEventListener("dragover", handlePageDragOver);
+
+                    if (isMobileDevice()) {
+                        document.body.classList.add('dragging-active');
+                    }
+                },
+                onEnd: () => {
+                    inventory.removeEventListener("dragover", handleInventoryDragOver);
+                    document.removeEventListener("dragover", handlePageDragOver);
+                    clearInterval(inventoryScrollInterval);
+                    clearInterval(pageScrollInterval);
+                    inventoryScrollInterval = null;
+                    pageScrollInterval = null;
+                    document.body.classList.remove('dragging-active');
+                }
+            });
+
+            // Initialize Sortable on all dropzones
+            const dropzones = {
+                hat: document.getElementById("hatZone"),
+                shirt: document.getElementById("shirtZone"),
+                pants: document.getElementById("pantsZone"),
+                feet: document.getElementById("feetZone")
+            };
+
+            Object.entries(dropzones).forEach(([cat, zone]) => {
+                if (!zone) return;
+
+                new Sortable(zone, {
+                    group: {
+                        name: "canvas",
+                        pull: true,
+                        put: true
+                    },
+                    animation: 150,
+                    delay: isMobileDevice() ? 100 : 0,
+                    delayOnTouchOnly: true,
+                    touchStartThreshold: 5,
+                    onAdd: (evt) => {
+                        const item = evt.item;
+                        const itemCat = item.dataset.cat;
+                        const correctZone = document.getElementById(catMap[itemCat]);
+                        
+                        if (correctZone && correctZone !== evt.to) {
+                            correctZone.appendChild(item);
+                        }
+                        
+                        styleCanvasItem(item);
+                        zone.classList.remove("empty");
+                        updateOrderLabel();
+                    },
+                    onRemove: (evt) => {
+                        if (evt.from.children.length === 0) {
+                            evt.from.classList.add("empty");
+                        }
+                        updateOrderLabel();
+                    }
+                });
+
+                // Add drag events
+                zone.addEventListener("dragover", () => {
+                    zone.classList.add("hovered");
+                });
+
+                zone.addEventListener("dragleave", () => {
+                    zone.classList.remove("hovered");
+                });
+
+                zone.addEventListener("drop", () => {
+                    zone.classList.remove("hovered");
+                });
+
+                // Add touch events for mobile
+                if (isMobileDevice()) {
+                    zone.addEventListener("touchmove", (e) => {
+                        if (e.touches && e.touches.length) {
+                            const touch = e.touches[0];
+                            const elementAtTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                            if (elementAtTouch && elementAtTouch.closest('.dropzone')) {
+                                elementAtTouch.closest('.dropzone').classList.add("hovered");
+                            }
+                        }
+                    }, {passive: true});
+
+                    zone.addEventListener("touchend", () => {
+                        zone.classList.remove("hovered");
+                    }, {passive: true});
+
+                    zone.addEventListener("touchcancel", () => {
+                        zone.classList.remove("hovered");
+                    }, {passive: true});
+                }
+            });
+        }
+
+        // Initialize sortable with mobile optimizations
+        initSortable();
+
+        // Handle inventory scroll during drag
+        function handleInventoryDragOver(e) {
+            const rect = inventory.getBoundingClientRect();
+            const bottomThreshold = rect.bottom - 50;
+            if (e.clientY > bottomThreshold && inventory.scrollHeight > inventory.clientHeight) {
+                if (!inventoryScrollInterval) {
+                    inventoryScrollInterval = setInterval(() => {
+                        inventory.scrollBy(0, 10);
+                    }, 20);
+                }
+            } else {
+                clearInterval(inventoryScrollInterval);
+                inventoryScrollInterval = null;
+            }
+        }
+
+        // Handle page scroll during drag
+        function handlePageDragOver(e) {
+            const windowHeight = window.innerHeight;
+            const bottomThreshold = windowHeight - 50;
+            if (e.clientY > bottomThreshold && document.documentElement.scrollHeight > windowHeight) {
+                if (!pageScrollInterval) {
+                    pageScrollInterval = setInterval(() => {
+                        window.scrollBy(0, 10);
+                    }, 20);
+                }
+            } else {
+                clearInterval(pageScrollInterval);
+                pageScrollInterval = null;
+            }
+        }
+
+        // Style items dropped on canvas
+        function styleCanvasItem(li) {
+            li.className = "relative select-none";
+            const img = document.createElement("img");
+            const item = ITEMS.find((i) => i.id === li.dataset.id);
+            img.src = item.img;
+            img.alt = li.dataset.name;
+            img.srcset = `${item.img} 1x, ${item.img} 2x`;
+            img.setAttribute("loading", "lazy");
+
+            const span = document.createElement("span");
+            span.className = "del-btn";
+            span.role = "button";
+            span.setAttribute("aria-label", "Remove");
+            span.textContent = "×";
+
+            li.innerHTML = "";
+            li.appendChild(img);
+            li.appendChild(span);
+        }
+
+        function updateOrderLabel() {
+            const layerVisualizer = document.getElementById("layerVisualizer");
+            const seq = ["hatZone", "shirtZone", "pantsZone", "feetZone"]
+                .map((id) => document.getElementById(id))
+                .filter((z) => z.children.length)
+                .map((z) => {
+                    return {
+                        name: z.children[0].dataset.name,
+                        id: z.children[0].dataset.id,
+                        cat: z.children[0].dataset.cat,
+                        img: z.children[0].querySelector("img").src
+                    };
+                });
+
+            orderLabel.textContent = seq.length
+                ? `Layers (top to bottom): ${seq.map(item => item.name).join(" → ")}`
+                : "Layers: (none)";
+            orderLabel.classList.add("updated");
+            setTimeout(() => orderLabel.classList.remove("updated"), 300);
+
+            layerVisualizer.innerHTML = "";
+            if (seq.length > 0) {
+                layerVisualizer.classList.remove("hidden");
+                
+                // Create stacked visualization
+                const stackContainer = document.createElement("div");
+                stackContainer.className = "relative h-24 w-full mt-3";
+                
+                // Add items in reverse order (bottom to top)
+                seq.slice().reverse().forEach((item, index) => {
+                    const layerItem = document.createElement("div");
+                    layerItem.className = "absolute left-1/2 transform -translate-x-1/2 transition-all duration-300";
+                    layerItem.style.top = `${index * 8}px`;
+                    layerItem.style.zIndex = 10 + index;
+                    layerItem.style.animationDelay = `${index * 100}ms`;
+                    
+                    const imgWrapper = document.createElement("div");
+                    imgWrapper.className = "bg-white dark:bg-gray-800 rounded-lg p-1 shadow-md transition-transform duration-300 hover:scale-105";
+                    
+                    const img = document.createElement("img");
+                    img.src = item.img;
+                    img.className = "h-16 object-contain mx-auto";
+                    img.alt = item.name;
+                    
+                    const label = document.createElement("div");
+                    label.className = "text-xs text-center mt-1 font-medium text-gray-700 dark:text-gray-300";
+                    label.textContent = item.name;
+                    
+                    imgWrapper.appendChild(img);
+                    layerItem.appendChild(imgWrapper);
+                    layerItem.appendChild(label);
+                    stackContainer.appendChild(layerItem);
+                });
+                
+                layerVisualizer.appendChild(stackContainer);
+            } else {
+                layerVisualizer.classList.add("hidden");
+            }
+
+            zones.forEach((zone) => {
+                zone.classList.toggle("empty", zone.children.length === 0);
+            });
+
+            // Enable/disable save button based on whether there are items
+            saveOutfitBtn.disabled = seq.length === 0;
+            saveOutfitBtn.classList.toggle('opacity-50', seq.length === 0);
+            saveOutfitBtn.classList.toggle('cursor-not-allowed', seq.length === 0);
+        }
+
+        // Update the layer order label and visualizer
+        function updateOrderLabel() {
+            const layerVisualizer = document.getElementById("layerVisualizer");
+            const seq = ["hatZone", "shirtZone", "pantsZone", "feetZone"]
+                .map((id) => document.getElementById(id))
+                .filter((z) => z.children.length)
+                .map((z) => {
+                    return {
+                        name: z.children[0].dataset.name,
+                        id: z.children[0].dataset.id,
+                        cat: z.children[0].dataset.cat
+                    };
+                });
+
+            orderLabel.textContent = seq.length
+                ? `Layers (top to bottom): ${seq.map(item => item.name).join(" → ")}`
+                : "Layers: (none)";
+            orderLabel.classList.add("updated");
+            setTimeout(() => orderLabel.classList.remove("updated"), 300);
+
+            layerVisualizer.innerHTML = "";
+            if (seq.length > 0) {
+                layerVisualizer.classList.remove("hidden");
+
+                seq.forEach((item, index) => {
+                    const layerItem = document.createElement("div");
+                    layerItem.className = "flex items-center gap-2 p-2 rounded-lg bg-white/50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600/50 transition-all duration-300 animate-fadeIn";
+                    layerItem.style.animationDelay = `${index * 100}ms`;
+
+                    const icon = document.createElement("span");
+                    icon.className = "material-icons-round text-accent2 text-sm";
+                    icon.textContent = catIcons[item.cat] || "layers";
+
+                    const text = document.createElement("span");
+                    text.className = "text-sm font-medium text-gray-700 dark:text-gray-300";
+                    text.textContent = item.name;
+
+                    layerItem.appendChild(icon);
+                    layerItem.appendChild(text);
+                    layerVisualizer.appendChild(layerItem);
+                });
+            } else {
+                layerVisualizer.classList.add("hidden");
+            }
+
+            zones.forEach((zone) => {
+                zone.classList.toggle("empty", zone.children.length === 0);
+            });
+
+            // Enable/disable save button based on whether there are items
+            saveOutfitBtn.disabled = seq.length === 0;
+            saveOutfitBtn.classList.toggle('opacity-50', seq.length === 0);
+            saveOutfitBtn.classList.toggle('cursor-not-allowed', seq.length === 0);
+        }
+
+        // Event listener for delete buttons
+        document.body.addEventListener("click", (e) => {
+            if (e.target.classList.contains("del-btn")) {
+                e.target.parentElement.remove();
+                updateOrderLabel();
+            }
+        });
+
+        // Adjust UI based on screen size
+        function adjustUIForScreenSize() {
+            const isMobile = window.innerWidth < 640;
+
+            // Adjust toast duration and placement based on screen size
+            const toastDuration = isMobile ? 4000 : 3000; // Longer duration on mobile
+
+            // Apply appropriate styles
+            document.body.classList.toggle('mobile-view', isMobile);
+
+            return {isMobile, toastDuration};
+        }
+
+        // Initialize mobile optimizations
+        function initMobileOptimizations() {
+            const {isMobile, toastDuration} = adjustUIForScreenSize();
+
+            // Listen for orientation changes
+            window.addEventListener('resize', adjustUIForScreenSize);
+
+            // Show a mobile-specific welcome toast
+            if (isMobile) {
+                setTimeout(() => {
+                    showToast('info', 'Mobile View', 'Tap and hold items to drag them to your outfit!', toastDuration);
+                }, 1000);
+            }
+        }
+
+        // Call this function after the page has loaded
+        window.addEventListener('DOMContentLoaded', initMobileOptimizations);
+
+        // Toast notification system
+        function showToast(type, title, message, duration = 3000) {
+            // Adjust duration for mobile
+            if (isMobileDevice()) {
+                duration = Math.max(duration, 4000); // Ensure at least 4 seconds on mobile
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icon = document.createElement('span');
+            icon.className = 'material-icons-round text-xl';
+
+            switch (type) {
+                case 'success':
+                    icon.textContent = 'check_circle';
+                    icon.style.color = '#34d399';
+                    break;
+                case 'info':
+                    icon.textContent = 'info';
+                    icon.style.color = '#3b82f6';
+                    break;
+                case 'warning':
+                    icon.textContent = 'warning';
+                    icon.style.color = '#f59e0b';
+                    break;
+                case 'error':
+                    icon.textContent = 'error';
+                    icon.style.color = '#ef4444';
+                    break;
+            }
+
+            const content = document.createElement('div');
+            content.className = 'toast-content';
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'toast-title';
+            titleEl.textContent = title;
+
+            const messageEl = document.createElement('div');
+            messageEl.className = 'toast-message';
+            messageEl.textContent = message;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close';
+            closeBtn.textContent = '×';
+            closeBtn.addEventListener('click', () => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            });
+
+            content.appendChild(titleEl);
+            content.appendChild(messageEl);
+
+            toast.appendChild(icon);
+            toast.appendChild(content);
+            toast.appendChild(closeBtn);
+
+            toastContainer.appendChild(toast);
+
+            // Trigger reflow to enable animation
+            toast.offsetHeight;
+
+            // Show the toast
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            // Auto-remove after duration
+            const timeout = setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+
+            // Clear timeout if closed manually
+            closeBtn.addEventListener('click', () => clearTimeout(timeout));
+
+            return toast;
+        }
+
+        // Get current outfit data
+        function getCurrentOutfit() {
+            const outfit = {};
+            let hasItems = false;
+
+            for (const [cat, zoneId] of Object.entries(catMap)) {
+                const zone = document.getElementById(zoneId);
+                if (zone.children.length > 0) {
+                    hasItems = true;
+                    const item = zone.children[0];
+                    outfit[cat] = {
+                        id: item.dataset.id,
+                        name: item.dataset.name
+                    };
+                }
+            }
+
+            return outfit;
+        }
+
+        // Load outfit from data
+        function loadOutfit(outfit) {
+            // Reset current outfit
+            resetOutfit(false);
+
+            // Load each item from the outfit data
+            for (const [cat, item] of Object.entries(outfit)) {
+                if (!item) continue;
+
+                const itemData = ITEMS.find(i => i.id === item.id);
+                if (!itemData) continue;
+
+                const zone = document.getElementById(catMap[cat]);
+                const li = document.createElement("li");
+                Object.assign(li.dataset, itemData);
+
+                zone.appendChild(li);
+                styleCanvasItem(li);
+                zone.classList.remove("empty");
+            }
+
+            updateOrderLabel();
+        }
+
+        // Save current outfit
+        function saveOutfit(name) {
+            const outfit = getCurrentOutfit();
+            const categories = ['hat', 'shirt', 'pants', 'feet']; // All required categories
+
+            // Check if outfit has any items at all
+            if (Object.keys(outfit).length === 0) {
+                showToast('warning', 'Nothing to Save', 'Add items to your outfit before saving.');
+                return false;
+            }
+
+            const missingCategories = categories.filter(cat => !outfit[cat]);
+            if (missingCategories.length > 0) {
+                const missingText = missingCategories.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ');
+                showToast('warning', 'Incomplete Outfit', `Please add the following items: ${missingText}`);
+                return false;
+            }
+
+            const id = Date.now().toString();
+            const newOutfit = {
+                id,
+                name: name || `Outfit ${savedOutfits.length + 1}`,
+                date: new Date().toISOString(),
+                items: outfit
+            };
+
+            savedOutfits.push(newOutfit);
+            localStorage.setItem(SAVED_OUTFITS_KEY, JSON.stringify(savedOutfits));
+
+            showToast('success', 'Outfit Saved', `"${newOutfit.name}" has been saved to your archive.`);
+            return true;
+        }
+
+        // Delete saved outfit
+        function deleteOutfit(id) {
+            const index = savedOutfits.findIndex(o => o.id === id);
+            if (index === -1) return false;
+
+            const outfitName = savedOutfits[index].name;
+            savedOutfits.splice(index, 1);
+            localStorage.setItem(SAVED_OUTFITS_KEY, JSON.stringify(savedOutfits));
+
+            showToast('info', 'Outfit Deleted', `"${outfitName}" has been removed from your archive.`);
+            return true;
+        }
+
+        // Rename saved outfit
+        function renameOutfit(id, newName) {
+            const outfit = savedOutfits.find(o => o.id === id);
+            if (!outfit) return false;
+
+            const oldName = outfit.name;
+            outfit.name = newName;
+            localStorage.setItem(SAVED_OUTFITS_KEY, JSON.stringify(savedOutfits));
+
+            showToast('success', 'Outfit Renamed', `"${oldName}" is now "${newName}".`);
+            return true;
+        }
+
+        // Update archive list in modal
+        function updateArchiveList() {
+            const archiveList = document.getElementById("archiveList");
+            const emptyMessage = document.getElementById("emptyArchiveMessage");
+
+            // Clear the list first
+            archiveList.innerHTML = '';
+
+            // Reload saved outfits from localStorage to ensure we have fresh data
+            savedOutfits = JSON.parse(localStorage.getItem(SAVED_OUTFITS_KEY) || "[]");
+
+            if (savedOutfits.length === 0) {
+                // Create a new empty message if the original is gone
+                if (!document.getElementById("emptyArchiveMessage")) {
+                    const newEmptyMessage = document.createElement('div');
+                    newEmptyMessage.className = "text-gray-500 dark:text-gray-400 text-center p-6 my-6";
+                    newEmptyMessage.id = "emptyArchiveMessage";
+                    newEmptyMessage.innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <span class="material-icons-round text-4xl mb-2 text-gray-300 dark:text-gray-600">folder_open</span>
+                            <p class="mb-2">No saved outfits yet.</p>
+                            <p class="text-sm italic">Create and save your first outfit!</p>
+                        </div>
+                    `;
+                    archiveList.appendChild(newEmptyMessage);
+                } else {
+                    archiveList.appendChild(emptyMessage);
+                }
+                return;
+            }
+
+            // Continue with existing logic for non-empty archives
+            if (emptyMessage && emptyMessage.parentNode) {
+                emptyMessage.parentNode.removeChild(emptyMessage);
+            }
+
+            // Sort outfits by date (newest first)
+            const sortedOutfits = [...savedOutfits].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedOutfits.forEach(outfit => {
+                const archiveItem = document.createElement('div');
+                archiveItem.className = 'archive-item';
+                archiveItem.dataset.id = outfit.id;
+
+                const itemCount = Object.keys(outfit.items).length;
+
+                // Create item content
+                const content = document.createElement('div');
+                content.className = 'flex flex-col';
+
+                const name = document.createElement('div');
+                name.className = 'font-semibold text-gray-900 dark:text-gray-100';
+                name.textContent = outfit.name;
+
+                const details = document.createElement('div');
+                details.className = 'text-xs text-gray-500 dark:text-gray-400';
+
+                const date = new Date(outfit.date);
+                const formattedDate = date.toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                details.textContent = `${itemCount} items • ${formattedDate}`;
+
+                content.appendChild(name);
+                content.appendChild(details);
+
+                // Create action buttons
+                const actions = document.createElement('div');
+                actions.className = 'actions-container';
+
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'btn-icon load-outfit';
+                loadBtn.setAttribute('aria-label', 'Load outfit');
+                loadBtn.dataset.id = outfit.id;
+                loadBtn.innerHTML = '<span class="material-icons-round">style</span>';
+
+                const renameBtn = document.createElement('button');
+                renameBtn.className = 'btn-icon rename-outfit';
+                renameBtn.setAttribute('aria-label', 'Rename outfit');
+                renameBtn.dataset.id = outfit.id;
+                renameBtn.dataset.name = outfit.name;
+                renameBtn.innerHTML = '<span class="material-icons-round">edit</span>';
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-icon delete-outfit';
+                deleteBtn.setAttribute('aria-label', 'Delete outfit');
+                deleteBtn.dataset.id = outfit.id;
+                deleteBtn.innerHTML = '<span class="material-icons-round">delete</span>';
+
+                actions.appendChild(loadBtn);
+                actions.appendChild(renameBtn);
+                actions.appendChild(deleteBtn);
+
+                archiveItem.appendChild(content);
+                archiveItem.appendChild(actions);
+
+                archiveList.appendChild(archiveItem);
+            });
+        }
+
+        // Reset outfit function
+        function resetOutfit(showConfirmation = true) {
+            if (showConfirmation) {
+                closeModalFunc(resetModal);
+            }
+
+            zones.forEach((z) => {
+                z.innerHTML = "";
+                z.classList.add("empty");
+            });
+
+            updateOrderLabel();
+
+            if (showConfirmation) {
+                showToast('info', 'Outfit Reset', 'Your outfit has been cleared.');
+            }
+        }
+
+        // Generic open modal function
+        function openModal(modal) {
+            // Close any open modals first
+            [resetModal, saveModal, archiveModal, renameModal].forEach(m => {
+                closeModalFunc(m);
+            });
+
+            // Then open the requested modal
+            modal.classList.add("active");
+            document.body.style.overflow = "hidden";
+
+            // Focus the first focusable element
+            const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusable) {
+                focusable.focus();
+            }
+        }
+
+        // Generic close modal function
+        function closeModalFunc(modal) {
+            modal.classList.remove("active");
+            document.body.style.overflow = "";
+        }
+
+        // Event listeners for modals
+
+        // Reset modal
+        resetBtn.addEventListener("click", function () {
+            openModal(resetModal);
+        });
+
+        closeResetModal.addEventListener("click", function () {
+            closeModalFunc(resetModal);
+        });
+
+        cancelReset.addEventListener("click", function () {
+            closeModalFunc(resetModal);
+        });
+
+        confirmReset.addEventListener("click", function () {
+            resetOutfit(true);
+        });
+
+        // Save Outfit button handler
+        saveOutfitBtn.addEventListener("click", function () {
+            const outfit = getCurrentOutfit();
+
+            // Check if the outfit has at least one item
+            if (Object.keys(outfit).length === 0) {
+                showToast('warning', 'Incomplete Outfit', 'Please add at least one item to your outfit before saving.');
+                return;
+            }
+
+
+
+            openModal(saveModal);
+            document.getElementById('outfitName').value = `Outfit ${savedOutfits.length + 1}`;
+            document.getElementById('outfitName').select();
+        });
+
+        closeSaveModal.addEventListener("click", function () {
+            closeModalFunc(saveModal);
+        });
+
+        cancelSave.addEventListener("click", function () {
+            closeModalFunc(saveModal);
+        });
+
+        confirmSave.addEventListener("click", function () {
+            const name = document.getElementById('outfitName').value.trim();
+            if (!name) {
+                showToast('warning', 'Name Required', 'Please enter a name for your outfit.');
+                return;
+            }
+
+            if (saveOutfit(name)) {
+                closeModalFunc(saveModal);
+                updateArchiveList();
+            }
+        });
+
+        // Archive modal
+        document.getElementById("archiveBtn").addEventListener("click", function () {
+            savedOutfits = JSON.parse(localStorage.getItem(SAVED_OUTFITS_KEY) || "[]");
+            updateArchiveList();
+            openModal(document.getElementById("archiveModal"));
+        });
+
+        document.getElementById("closeArchiveModal").addEventListener("click", function () {
+            closeModalFunc(document.getElementById("archiveModal"));
+        });
+
+        document.getElementById("closeArchive").addEventListener("click", function () {
+            closeModalFunc(document.getElementById("archiveModal"));
+        });
+
+        // Event delegation for archive actions
+        document.getElementById('archiveList').addEventListener('click', function (e) {
+            // Load outfit
+            if (e.target.closest('.load-outfit')) {
+                const id = e.target.closest('.load-outfit').dataset.id;
+                const outfit = savedOutfits.find(o => o.id === id);
+
+                if (outfit) {
+                    loadOutfit(outfit.items);
+                    closeModalFunc(archiveModal);
+                    showToast('success', 'Outfit Loaded', `"${outfit.name}" has been loaded.`);
+                }
+            }
+
+            // Rename outfit
+            if (e.target.closest('.rename-outfit')) {
+                const btn = e.target.closest('.rename-outfit');
+                const id = btn.dataset.id;
+                const name = btn.dataset.name;
+
+                document.getElementById('newOutfitName').value = name;
+                document.getElementById('renameOutfitId').value = id;
+
+                closeModalFunc(archiveModal);
+                openModal(renameModal);
+                document.getElementById('newOutfitName').select();
+            }
+
+            // Delete outfit
+            if (e.target.closest('.delete-outfit')) {
+                const id = e.target.closest('.delete-outfit').dataset.id;
+
+                if (deleteOutfit(id)) {
+                    updateArchiveList();
+                }
+            }
+        });
+
+        // Rename modal
+        closeRenameModal.addEventListener("click", function () {
+            closeModalFunc(renameModal);
+        });
+
+        cancelRename.addEventListener("click", function () {
+            closeModalFunc(renameModal);
+        });
+
+        confirmRename.addEventListener("click", function () {
+            const id = document.getElementById('renameOutfitId').value;
+            const newName = document.getElementById('newOutfitName').value.trim();
+
+            if (!newName) {
+                showToast('warning', 'Name Required', 'Please enter a name for your outfit.');
+                return;
+            }
+
+            if (renameOutfit(id, newName)) {
+                closeModalFunc(renameModal);
+                updateArchiveList();
+                openModal(archiveModal);
+            }
+        });
+
+        // Close modals with Escape key
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                if (resetModal.classList.contains("active")) {
+                    closeModalFunc(resetModal);
+                }
+                if (saveModal.classList.contains("active")) {
+                    closeModalFunc(saveModal);
+                }
+                if (archiveModal.classList.contains("active")) {
+                    closeModalFunc(archiveModal);
+                }
+                if (renameModal.classList.contains("active")) {
+                    closeModalFunc(renameModal);
+                }
+            }
+        });
+
+        // Close modals when clicking outside
+        [resetModal, saveModal, archiveModal, renameModal].forEach(modal => {
+            modal.addEventListener("click", function (e) {
+                if (e.target === modal) {
+                    closeModalFunc(modal);
+                }
+            });
+        });
+
+        // Theme toggle
+        document.getElementById("themeToggle").onclick = () => {
+            document.documentElement.classList.toggle("dark");
+            document.documentElement.classList.toggle("light");
+            
+            // Save theme preference
+            const isDark = document.documentElement.classList.contains("dark");
+            localStorage.setItem("layerYourLook_darkMode", isDark ? "true" : "false");
+        };
+
+        // Load theme preference on startup
+        const savedDarkMode = localStorage.getItem("layerYourLook_darkMode");
+        if (savedDarkMode === "true") {
+            document.documentElement.classList.add("dark");
+            document.documentElement.classList.remove("light");
+        }
+
+        // Initialize outfit display
+        updateOrderLabel();
+
+        // Show welcome toast
+        setTimeout(() => {
+            const isMobile = isMobileDevice();
+            if (isMobile) {
+                showToast('info', 'Welcome to Layer Your Look', 'Tap and hold items to drag them to your outfit!', 4000);
+            } else {
+                showToast('info', 'Welcome to Layer Your Look', 'Drag and drop items to create your perfect outfit!', 3000);
+            }
+        }, 500);
+
+        // Update the category dropdown functionality
+        document.getElementById('categorySelect').addEventListener('change', function(e) {
+            const selectedCategory = e.target.value;
+            
+            // Hide all dropzones
+            document.querySelectorAll('.category-dropzone').forEach(container => {
+                container.classList.add('hidden');
+            });
+            
+            // Show selected dropzone
+            const selectedContainer = document.getElementById(`${selectedCategory}DropzoneContainer`);
+            if (selectedContainer) {
+                selectedContainer.classList.remove('hidden');
+                
+                // Ensure the dropzone is properly initialized
+                const dropzone = selectedContainer.querySelector('.dropzone');
+                if (dropzone && !dropzone._sortable) {
+                    new Sortable(dropzone, {
+                        group: {
+                            name: "canvas",
+                            pull: true,
+                            put: (to, from, dragEl) => {
+                                return dragEl.dataset.cat === to.el.dataset.cat;
+                            }
+                        },
+                        animation: 150,
+                        delay: isMobileDevice() ? 100 : 0,
+                        delayOnTouchOnly: true,
+                        touchStartThreshold: 5,
+                        ghostClass: "drag-ghost",
+                        onAdd: (evt) => {
+                            const item = evt.item;
+                            const itemCat = item.dataset.cat;
+                            const correctZone = document.getElementById(catMap[itemCat]);
+                            
+                            if (correctZone && correctZone !== evt.to) {
+                                correctZone.appendChild(item);
+                            }
+                            
+                            styleCanvasItem(item);
+                            dropzone.classList.remove("empty");
+                            updateOrderLabel();
+
+                            // Show success feedback
+                            showToast('success', 'Item Added', `Added ${item.dataset.name} to your outfit`);
+                        },
+                        onRemove: (evt) => {
+                            if (evt.from.children.length === 0) {
+                                evt.from.classList.add("empty");
+                            }
+                            updateOrderLabel();
+
+                            // Show removal feedback
+                            showToast('info', 'Item Removed', `Removed ${evt.item.dataset.name} from your outfit`);
+                        }
+                    });
+                }
+            }
+        });
+
+        // Initialize with first category
+        document.getElementById('categorySelect').dispatchEvent(new Event('change'));
+    </script>
+</body>
+
+</html>

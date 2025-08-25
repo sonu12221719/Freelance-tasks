@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Search Data Journey</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .pulse-animation {
+      animation: pulse 2s infinite;
+    }
+  </style>
+</head>
+<body class="bg-[#18191A] min-h-screen font-['Inter'] flex flex-col">
+    <header class="w-full flex flex-col items-center mt-6 md:mt-12 mb-4 md:mb-8 px-4">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-[70px] font-bold text-white font-sans tracking-tight mb-2 select-none text-center" style="font-family: 'Product Sans', 'Inter', Arial, sans-serif; letter-spacing: -2px;">Google Search Data Journey</h1>
+    </header>
+    <main class="w-full flex flex-col items-center">
+        <div class="w-full max-w-2xl flex flex-col items-center px-4">
+            <div class="relative w-full mb-8">
+              <input
+                id="searchQuery"
+                type="text"
+                placeholder="Search the web..."
+                class="w-full pl-12 pr-36 py-4 rounded-full bg-[#202124] text-white text-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-lg"
+              />
+              <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <button
+                id="startButton"
+                class="absolute right-2 top-1/2 transform -translate-y-1/2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-semibold shadow-md transition-all"
+              >
+                Start Journey
+              </button>
+            </div>
+          </div>
+          
+          <div id="timelineContainer" class="hidden w-full mx-auto px-4">
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/10 p-8 transition-all duration-300">
+              <div class="overflow-x-auto md:overflow-visible">
+                <div id="p5Canvas" class="w-full h-[200px] mb-16 min-w-[600px] md:min-w-0"></div>
+              </div>
+
+              <!-- Event Details -->
+              <div id="eventDetails" class="mt-8 px-8 py-6 bg-[#18191A]/80 rounded-xl border border-white/10 text-gray-100 transition-all duration-300">
+                <div class="text-center text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-3 pulse-animation" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p class="text-base">Click on a marker to explore how your search data is tracked and shared.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+    </main>
+
+    <footer class="w-full mt-auto py-6 px-4">
+      
+          <p class="text-center text-gray-500 text-sm">
+            © 2024 Google Search Data Journey. This is a demonstration project.
+          </p>
+    </footer>
+
+  <script>
+    const events = [
+      {
+        time: 0,
+        title: "Query Stored",
+        description: (query) => `
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="p-2 bg-blue-500/20 rounded-lg">
+                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-blue-400">Query Stored</h3>
+            </div>
+            <p class="text-gray-300">Your search query "${query}" is immediately stored in Google's servers.</p>
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>This data is encrypted and stored in Google's global data centers.</span>
+            </div>
+          </div>
+        `,
+        color: [59, 130, 246]
+      },
+      {
+        time: 1,
+        title: "User Profiling",
+        description: (query) => `
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="p-2 bg-indigo-500/20 rounded-lg">
+                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-indigo-400">User Profiling</h3>
+            </div>
+            <p class="text-gray-300">The query "${query}" is analyzed to build your user profile.</p>
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span>Google uses this to personalize your search results and ads.</span>
+            </div>
+          </div>
+        `,
+        color: [99, 102, 241]
+      },
+      {
+        time: 4,
+        title: "Shared with Advertisers",
+        description: (query) => `
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="p-2 bg-purple-500/20 rounded-lg">
+                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-purple-400">Shared with Advertisers</h3>
+            </div>
+            <p class="text-gray-300">Data from "${query}" is shared with advertising partners.</p>
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span>This helps advertisers target their campaigns more effectively.</span>
+            </div>
+          </div>
+        `,
+        color: [139, 92, 246]
+      },
+      {
+        time: 12,
+        title: "Data Aggregated",
+        description: (query) => `
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="p-2 bg-pink-500/20 rounded-lg">
+                <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-pink-400">Data Aggregated</h3>
+            </div>
+            <p class="text-gray-300">The query "${query}" is aggregated for analytics purposes.</p>
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>This helps Google improve its services and understand user behavior.</span>
+            </div>
+          </div>
+        `,
+        color: [236, 72, 153]
+      },
+      {
+        time: 18,
+        title: "Sold to Data Brokers",
+        description: (query) => `
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="p-2 bg-red-500/20 rounded-lg">
+                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-red-400">Sold to Data Brokers</h3>
+            </div>
+            <p class="text-gray-300">Data from "${query}" is sold to third-party data brokers.</p>
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span>This data is often used for market research and targeted advertising.</span>
+            </div>
+          </div>
+        `,
+        color: [239, 68, 68]
+      },
+      {
+        time: 24,
+        title: "Data Archived",
+        description: (query) => `
+          <div class="space-y-4">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="p-2 bg-gray-500/20 rounded-lg">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-400">Data Archived</h3>
+            </div>
+            <p class="text-gray-300">The query "${query}" is archived for long-term storage.</p>
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>This data may be retained for years and used for various purposes.</span>
+            </div>
+          </div>
+        `,
+        color: [107, 114, 128]
+      }
+    ];
+
+    let query = "";
+    let timelineVisible = false;
+    let currentFocusIndex = -1;
+    let markers = [];
+    let hoveredMarker = null;
+
+    function setup() {
+      const canvasWidth = windowWidth < 768 ? 600 : windowWidth - 64;
+      const canvas = createCanvas(canvasWidth, 200);
+      canvas.parent('p5Canvas');
+      textFont('Inter');
+    }
+
+    function draw() {
+      if (!timelineVisible) return;
+
+      background(24, 25, 26, 0); // Transparent background
+      markers = [];
+
+      // Draw timeline line with gradient
+      const startX = 50;
+      const endX = width - 50;
+      const centerY = 100;
+      
+      // Draw main line
+      strokeWeight(4);
+      for (let x = startX; x <= endX; x++) {
+        const inter = map(x, startX, endX, 0, 1);
+        // Bright gradient from cyan to purple
+        const r = lerp(34, 139, inter);   // Cyan to Purple
+        const g = lerp(211, 92, inter);
+        const b = lerp(238, 246, inter);
+        stroke(r, g, b, 0.9);  // Increased opacity
+        line(x, centerY, x, centerY);
+      }
+
+      // Draw markers and labels
+      events.forEach((event, index) => {
+        const x = map(event.time, 0, 24, startX, endX);
+        
+        // Draw marker
+        noStroke();
+        
+        // Active point animation
+        if (index === currentFocusIndex) {
+          // Pulsing effect
+          const pulseSize = 28 + sin(frameCount * 0.1) * 4;
+          fill(255, 255, 255, 0.2);
+          ellipse(x, centerY, pulseSize, pulseSize);
+        }
+        
+        // Draw point with hover effect
+        fill(...event.color);
+        const pointSize = (hoveredMarker !== null && hoveredMarker.index === index) ? 24 : 16;
+        ellipse(x, centerY, pointSize, pointSize);
+        
+        // Store marker position for interaction
+        markers.push({
+          x: x,
+          y: centerY,
+          radius: 16,
+          index: index
+        });
+
+        // Draw time label
+        fill(156, 163, 175);
+        textAlign(CENTER);
+        textSize(14);
+        text(`${event.time}h`, x, centerY + 30);
+
+        // Draw title
+        fill(255, 255, 255, 0.7);
+        textSize(12);
+        text(event.title, x, centerY + 50);
+      });
+    }
+
+    function mouseMoved() {
+      if (!timelineVisible) return;
+
+      let found = false;
+      for (let marker of markers) {
+        const d = dist(mouseX, mouseY, marker.x, marker.y);
+        if (d < marker.radius) {
+          hoveredMarker = marker;
+          found = true;
+          document.body.style.cursor = 'pointer';
+          // Show preview on hover
+          const event = events[marker.index];
+          const eventDetails = document.getElementById("eventDetails");
+          eventDetails.innerHTML = event.description(query);
+          eventDetails.classList.add('active');
+          break;
+        }
+      }
+      if (!found) {
+        hoveredMarker = null;
+        document.body.style.cursor = 'default';
+        // If no marker is hovered and no marker is selected, show default message
+        if (currentFocusIndex === -1) {
+          const eventDetails = document.getElementById("eventDetails");
+          eventDetails.innerHTML = `
+            <div class="text-center text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-3 pulse-animation" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-base">Click on a marker to explore how your search data is tracked and shared.</p>
+            </div>
+          `;
+        }
+      }
+      redraw(); // Force redraw when hover state changes
+    }
+
+    function mousePressed() {
+      if (!timelineVisible) return;
+
+      for (let marker of markers) {
+        if (dist(mouseX, mouseY, marker.x, marker.y) < marker.radius) {
+          updateFocus(marker.index);
+          break;
+        }
+      }
+    }
+
+    function windowResized() {
+      const canvasWidth = windowWidth < 768 ? 600 : windowWidth - 64;
+      resizeCanvas(canvasWidth, 200);
+      redraw();
+    }
+
+    // Function to update focus and show event details
+    function updateFocus(index) {
+      currentFocusIndex = index;
+      const event = events[index];
+      const eventDetails = document.getElementById("eventDetails");
+      
+      // Update event details
+      eventDetails.innerHTML = event.description(query);
+      eventDetails.classList.add('active');
+      
+      redraw();
+    }
+
+    // Handle Start button
+    document.getElementById("startButton").addEventListener("click", () => {
+      query = document.getElementById("searchQuery").value || "example query";
+      if (query.trim() === "") {
+        alert("Please enter a search query");
+        return;
+      }
+      timelineVisible = true;
+      document.getElementById("timelineContainer").classList.remove("hidden");
+      currentFocusIndex = -1; // Reset focus index
+      updateFocus(0);
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (!timelineVisible) return;
+      
+      if (e.key === 'ArrowLeft') {
+        const newIndex = Math.max(0, currentFocusIndex - 1);
+        updateFocus(newIndex);
+      } else if (e.key === 'ArrowRight') {
+        const newIndex = Math.min(events.length - 1, currentFocusIndex + 1);
+        updateFocus(newIndex);
+      }
+    });
+  </script>
+</body>
+</html>
